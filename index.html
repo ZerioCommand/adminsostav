@@ -23,7 +23,13 @@
     .avatar {
       width: 40px; height: 40px; border-radius: 50%;
       background: var(--accent); display: flex; align-items: center;
-      justify-content: center; cursor: pointer; font-weight: bold;
+      justify-content: center; cursor: pointer;
+    }
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
     }
     .add-btn {
       position: fixed; bottom: 30px; right: 30px;
@@ -38,9 +44,23 @@
     .add-btn.visible {
       opacity: 1; visibility: visible; transform: scale(1);
     }
+    .search-box {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .search-box input {
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 8px;
+      background: #2d2d44;
+      color: var(--text);
+      border: 1px solid #444;
+      outline: none;
+    }
     .hierarchy {
       display: flex; flex-direction: column; gap: 20px;
-      max-width: 800px; margin: 0 auto; padding-top: 20px;
+      max-width: 800px; margin: 0 auto;
     }
     .role-card {
       background: var(--card-bg); border-radius: 12px;
@@ -50,7 +70,7 @@
     .role-card.disabled { opacity: 0.6; }
     .role-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; color: var(--accent); }
     .nickname { font-size: 20px; margin-bottom: 12px; }
-    .links { display: flex; gap: 10px; margin: 10px 0; }
+    .links { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
     .link { color: var(--text); text-decoration: underline; font-size: 14px; }
     .link:hover { color: var(--accent); }
     .warnings { font-size: 14px; color: var(--danger); margin-top: 8px; }
@@ -77,6 +97,7 @@
     .modal-content {
       background: var(--card-bg); padding: 25px;
       border-radius: 15px; width: 90%; max-width: 500px;
+      position: relative;
     }
     .modal h2 {
       margin-bottom: 20px; color: var(--accent); text-align: center;
@@ -94,6 +115,11 @@
       border-radius: 8px; cursor: pointer;
       font-weight: bold; width: 100%; margin-top: 15px;
     }
+    #deleteBtn {
+      background: var(--danger);
+      margin-top: 10px;
+      display: none;
+    }
     .close-modal {
       position: absolute; top: 15px; right: 15px;
       background: none; border: none; color: var(--text);
@@ -104,7 +130,14 @@
 <body>
 
 <div class="header">
-  <div class="avatar" id="authBtn">👤</div>
+  <div class="avatar" id="authBtn">
+    <!-- ⚠️ Замените URL на вашу аватарку -->
+    <img src="https://your-image-url-here.com/avatar.png" alt="Аватар">
+  </div>
+</div>
+
+<div class="search-box">
+  <input type="text" id="searchInput" placeholder="Поиск по нику...">
 </div>
 
 <div class="add-btn" id="addBtn">+</div>
@@ -155,6 +188,7 @@
         <label><input type="checkbox" id="disabled"> Отключено</label>
       </div>
       <button type="submit">Сохранить</button>
+      <button type="button" id="deleteBtn">Удалить</button>
     </form>
   </div>
 </div>
@@ -203,9 +237,12 @@
   const roleForm = document.getElementById('roleForm');
   const loginForm = document.getElementById('loginForm');
   const modalTitle = document.getElementById('modalTitle');
+  const searchInput = document.getElementById('searchInput');
+  const deleteBtn = document.getElementById('deleteBtn');
 
   let currentUser = null;
   let editingDocId = null;
+  let allRoles = [];
 
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
@@ -221,20 +258,34 @@
     try {
       const q = query(collection(db, "roles"), orderBy("createdAt", "asc"));
       const querySnapshot = await getDocs(q);
-      hierarchyContainer.innerHTML = '';
-      if (querySnapshot.empty) {
-        hierarchyContainer.innerHTML = '<p>Список ролей пуст.</p>';
-        return;
-      }
+      allRoles = [];
       querySnapshot.forEach((doc) => {
-        const role = doc.data();
-        const card = createRoleCard(role, doc.id);
-        hierarchyContainer.appendChild(card);
+        allRoles.push({ id: doc.id, ...doc.data() });
       });
+      renderRoles();
     } catch (err) {
       console.error("Ошибка загрузки:", err);
       hierarchyContainer.innerHTML = '<p style="color: red;">Ошибка загрузки данных</p>';
     }
+  }
+
+  function renderRoles() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    hierarchyContainer.innerHTML = '';
+
+    const filteredRoles = allRoles.filter(role =>
+      role.nickname.toLowerCase().includes(searchTerm)
+    );
+
+    if (filteredRoles.length === 0) {
+      hierarchyContainer.innerHTML = '<p>Ничего не найдено.</p>';
+      return;
+    }
+
+    filteredRoles.forEach(role => {
+      const card = createRoleCard(role, role.id);
+      hierarchyContainer.appendChild(card);
+    });
   }
 
   function createRoleCard(role, docId) {
@@ -244,9 +295,9 @@
       <div class="role-title">${role.role}</div>
       <div class="nickname">${role.nickname}</div>
       <div class="links">
-        ${role.link1 ? `<a href="${role.link1}" target="_blank" class="link">Ссылка 1</a>` : ''}
-        ${role.link2 ? `<a href="${role.link2}" target="_blank" class="link">Ссылка 2</a>` : ''}
-        ${role.link3 ? `<a href="${role.link3}" target="_blank" class="link">Ссылка 3</a>` : ''}
+        ${role.link1 ? `<a href="${role.link1}" target="_blank" class="link">Сайт</a>` : ''}
+        ${role.link2 ? `<a href="${role.link2}" target="_blank" class="link">Стим</a>` : ''}
+        ${role.link3 ? `<a href="${role.link3}" target="_blank" class="link">ТГ</a>` : ''}
       </div>
       ${role.warnings > 0 ? `<div class="warnings">Выговоров: ${role.warnings}</div>` : ''}
       ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
@@ -259,11 +310,14 @@
     return card;
   }
 
+  searchInput.addEventListener('input', renderRoles);
+
   addBtn.addEventListener('click', () => {
     editingDocId = null;
     modalTitle.textContent = 'Добавить роль';
     roleForm.reset();
     document.getElementById('disabled').checked = false;
+    deleteBtn.style.display = 'none';
     modal.classList.add('active');
   });
 
@@ -277,6 +331,7 @@
     document.getElementById('warnings').value = role.warnings || 0;
     document.getElementById('disabled').checked = role.disabled || false;
     modalTitle.textContent = 'Редактировать';
+    deleteBtn.style.display = 'block';
     modal.classList.add('active');
   }
 
@@ -328,12 +383,25 @@
       }
       modal.classList.remove('active');
       roleForm.reset();
+      await loadAndRenderRoles(); // Обновляем список
     } catch (err) {
       alert('Ошибка сохранения: ' + err.message);
+    }
+  };
+
+  deleteBtn.onclick = async () => {
+    if (!editingDocId) return;
+    if (!confirm('Вы уверены, что хотите удалить эту роль?')) return;
+
+    try {
+      await deleteDoc(doc(db, "roles", editingDocId));
+      modal.classList.remove('active');
+      await loadAndRenderRoles();
+    } catch (err) {
+      alert('Ошибка удаления: ' + err.message);
     }
   };
 </script>
 
 </body>
-
 </html>
