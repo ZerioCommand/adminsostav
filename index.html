@@ -113,7 +113,6 @@
   <p>Загрузка иерархии...</p>
 </div>
 
-<!-- Modal: Add/Edit -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <button class="close-modal" id="closeModal">&times;</button>
@@ -137,15 +136,15 @@
         <input type="text" id="nickname" required>
       </div>
       <div class="form-group">
-        <label>Ссылка 1</label>
+        <label>Сайт</label>
         <input type="url" id="link1">
       </div>
       <div class="form-group">
-        <label>Ссылка 2</label>
+        <label>Стим</label>
         <input type="url" id="link2">
       </div>
       <div class="form-group">
-        <label>Ссылка 3</label>
+        <label>ТГ</label>
         <input type="url" id="link3">
       </div>
       <div class="form-group">
@@ -160,7 +159,6 @@
   </div>
 </div>
 
-<!-- Login Modal -->
 <div class="modal" id="loginModal">
   <div class="modal-content">
     <h2>Авторизация</h2>
@@ -179,12 +177,10 @@
 </div>
 
 <script type="module">
-  // 🔥 Импорт Firebase SDK из CDN
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
   import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-  // Ваша конфигурация (публичная — это нормально!)
   const firebaseConfig = {
     apiKey: "AIzaSyCdVnWilNkGMkf7BQZmGLuVpEqUTPLjIj0",
     authDomain: "adminsostav.firebaseapp.com",
@@ -194,12 +190,10 @@
     appId: "1:403848315485:web:16a857b3972ee8b6b503b4"
   };
 
-  // Инициализация
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // DOM
   const hierarchyContainer = document.getElementById('hierarchyContainer');
   const addBtn = document.getElementById('addBtn');
   const authBtn = document.getElementById('authBtn');
@@ -213,7 +207,6 @@
   let currentUser = null;
   let editingDocId = null;
 
-  // Слушатель авторизации
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
     if (user) {
@@ -224,7 +217,6 @@
     loadAndRenderRoles();
   });
 
-  // Загрузка ролей из Firestore
   async function loadAndRenderRoles() {
     try {
       const q = query(collection(db, "roles"), orderBy("createdAt", "asc"));
@@ -267,7 +259,6 @@
     return card;
   }
 
-  // Открытие модалки
   addBtn.addEventListener('click', () => {
     editingDocId = null;
     modalTitle.textContent = 'Добавить роль';
@@ -289,14 +280,12 @@
     modal.classList.add('active');
   }
 
-  // Закрытие модалок
   closeModal.onclick = () => modal.classList.remove('active');
   window.onclick = (e) => {
     if (e.target === modal) modal.classList.remove('active');
     if (e.target === loginModal) loginModal.classList.remove('active');
   };
 
-  // Авторизация
   authBtn.onclick = () => {
     if (currentUser) {
       signOut(auth);
@@ -318,7 +307,6 @@
     }
   };
 
-  // Сохранение роли
   roleForm.onsubmit = async (e) => {
     e.preventDefault();
     const data = {
@@ -347,4 +335,5 @@
 </script>
 
 </body>
+
 </html>
