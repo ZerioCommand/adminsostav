@@ -256,7 +256,7 @@
         <input type="number" id="warnings" min="0" value="0">
       </div>
       <div class="form-group">
-        <label><input type="checkbox" id="disabled"> Отключено</label>
+        <label><input type="checkbox" id="disabled"> Отключить выговоры</label>
       </div>
       <button type="submit">Сохранить</button>
       <button type="button" id="deleteBtn">Удалить</button>
@@ -329,9 +329,8 @@
   let editingDocId = null;
   let allRoles = [];
 
-  // Кэш
   const CACHE_KEY = 'roles_cache';
-  const CACHE_EXPIRY = 5 * 60 * 1000; // 5 минут
+  const CACHE_EXPIRY = 5 * 60 * 1000;
 
   function showOfflineBanner(show = true) {
     offlineBanner.style.display = show ? 'block' : 'none';
@@ -454,7 +453,6 @@
       return;
     }
 
-    // Сортируем группы по приоритету
     const orderedGroups = Object.keys(groups).sort((a, b) => {
       return (ROLE_PRIORITY[a] ?? 99) - (ROLE_PRIORITY[b] ?? 99);
     });
@@ -495,7 +493,6 @@
     return card;
   }
 
-  // Слушатели
   searchInput.addEventListener('input', renderRoles);
   warningsFilter.addEventListener('change', renderRoles);
 
@@ -607,7 +604,6 @@
     }
   };
 
-  // Инициализация
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
     if (user) {
@@ -615,10 +611,9 @@
     } else {
       addBtn.classList.remove('visible');
     }
-    loadAndRenderRoles(); // Загружаем с кэшем
+    loadAndRenderRoles();
   });
 
-  // Если сначала offline — покажем кэш сразу
   if (!isOnline()) {
     loadAndRenderRoles();
   }
@@ -626,3 +621,4 @@
 
 </body>
 </html>
+
