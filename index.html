@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Состав Админов</title>
+  <style>
+    :root {
+      --bg: #0f0f1b;
+      --card-bg: #1a1a2e;
+      --text: #e6e6ff;
+      --accent: #4cc9f0;
+      --danger: #f72585;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .header { display: flex; justify-content: flex-end; padding: 15px 0; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--accent); display: flex; align-items: center;
+      justify-content: center; cursor: pointer; font-weight: bold;
+    }
+    .add-btn {
+      position: fixed; bottom: 30px; right: 30px;
+      width: 60px; height: 60px; border-radius: 50%;
+      background: var(--accent); color: #0f0f1b;
+      font-size: 28px; display: flex; align-items: center;
+      justify-content: center; cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      opacity: 0; visibility: hidden; transform: scale(0);
+      transition: all 0.3s ease; z-index: 10;
+    }
+    .add-btn.visible {
+      opacity: 1; visibility: visible; transform: scale(1);
+    }
+    .hierarchy {
+      display: flex; flex-direction: column; gap: 20px;
+      max-width: 800px; margin: 0 auto; padding-top: 20px;
+    }
+    .role-card {
+      background: var(--card-bg); border-radius: 12px;
+      padding: 20px; position: relative;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .role-card.disabled { opacity: 0.6; }
+    .role-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; color: var(--accent); }
+    .nickname { font-size: 20px; margin-bottom: 12px; }
+    .links { display: flex; gap: 10px; margin: 10px 0; }
+    .link { color: var(--text); text-decoration: underline; font-size: 14px; }
+    .link:hover { color: var(--accent); }
+    .warnings { font-size: 14px; color: var(--danger); margin-top: 8px; }
+    .edit-btn {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(255,255,255,0.1); border: none;
+      color: var(--accent); width: 30px; height: 30px;
+      border-radius: 50%; cursor: pointer;
+      opacity: 0; visibility: hidden;
+    }
+    .role-card:hover .edit-btn {
+      opacity: 1; visibility: visible;
+    }
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7); display: flex;
+      align-items: center; justify-content: center;
+      z-index: 100; opacity: 0; visibility: hidden;
+      transition: all 0.3s;
+    }
+    .modal.active {
+      opacity: 1; visibility: visible;
+    }
+    .modal-content {
+      background: var(--card-bg); padding: 25px;
+      border-radius: 15px; width: 90%; max-width: 500px;
+    }
+    .modal h2 {
+      margin-bottom: 20px; color: var(--accent); text-align: center;
+    }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-size: 14px; }
+    select, input {
+      width: 100%; padding: 10px; border-radius: 8px;
+      background: #2d2d44; color: var(--text);
+      border: 1px solid #444;
+    }
+    button {
+      background: var(--accent); color: #0f0f1b;
+      border: none; padding: 10px 20px;
+      border-radius: 8px; cursor: pointer;
+      font-weight: bold; width: 100%; margin-top: 15px;
+    }
+    .close-modal {
+      position: absolute; top: 15px; right: 15px;
+      background: none; border: none; color: var(--text);
+      font-size: 20px; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="avatar" id="authBtn">👤</div>
+</div>
+
+<div class="add-btn" id="addBtn">+</div>
+
+<div class="hierarchy" id="hierarchyContainer">
+  <p>Загрузка иерархии...</p>
+</div>
+
+<!-- Modal: Add/Edit -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="close-modal" id="closeModal">&times;</button>
+    <h2 id="modalTitle">Добавить роль</h2>
+    <form id="roleForm">
+      <div class="form-group">
+        <label>Роль</label>
+        <select id="roleSelect" required>
+          <option value="Владелец">Владелец</option>
+          <option value="Совладелец">Совладелец</option>
+          <option value="Руководство">Руководство</option>
+          <option value="Гл. Админ">Гл. Админ</option>
+          <option value="Покупной Админ">Покупной Админ</option>
+          <option value="Админ 2лвл">Админ 2лвл</option>
+          <option value="Админ 1лвл">Админ 1лвл</option>
+          <option value="Стажер">Стажер</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Никнейм</label>
+        <input type="text" id="nickname" required>
+      </div>
+      <div class="form-group">
+        <label>Ссылка 1</label>
+        <input type="url" id="link1">
+      </div>
+      <div class="form-group">
+        <label>Ссылка 2</label>
+        <input type="url" id="link2">
+      </div>
+      <div class="form-group">
+        <label>Ссылка 3</label>
+        <input type="url" id="link3">
+      </div>
+      <div class="form-group">
+        <label>Выговоры</label>
+        <input type="number" id="warnings" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label><input type="checkbox" id="disabled"> Отключено</label>
+      </div>
+      <button type="submit">Сохранить</button>
+    </form>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal" id="loginModal">
+  <div class="modal-content">
+    <h2>Авторизация</h2>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" required>
+      </div>
+      <div class="form-group">
+        <label>Пароль</label>
+        <input type="password" id="loginPassword" required>
+      </div>
+      <button type="submit">Войти</button>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+  // 🔥 Импорт Firebase SDK из CDN
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+  // Ваша конфигурация (публичная — это нормально!)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCdVnWilNkGMkf7BQZmGLuVpEqUTPLjIj0",
+    authDomain: "adminsostav.firebaseapp.com",
+    projectId: "adminsostav",
+    storageBucket: "adminsostav.firebasestorage.app",
+    messagingSenderId: "403848315485",
+    appId: "1:403848315485:web:16a857b3972ee8b6b503b4"
+  };
+
+  // Инициализация
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // DOM
+  const hierarchyContainer = document.getElementById('hierarchyContainer');
+  const addBtn = document.getElementById('addBtn');
+  const authBtn = document.getElementById('authBtn');
+  const modal = document.getElementById('modal');
+  const loginModal = document.getElementById('loginModal');
+  const closeModal = document.getElementById('closeModal');
+  const roleForm = document.getElementById('roleForm');
+  const loginForm = document.getElementById('loginForm');
+  const modalTitle = document.getElementById('modalTitle');
+
+  let currentUser = null;
+  let editingDocId = null;
+
+  // Слушатель авторизации
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    if (user) {
+      addBtn.classList.add('visible');
+    } else {
+      addBtn.classList.remove('visible');
+    }
+    loadAndRenderRoles();
+  });
+
+  // Загрузка ролей из Firestore
+  async function loadAndRenderRoles() {
+    try {
+      const q = query(collection(db, "roles"), orderBy("createdAt", "asc"));
+      const querySnapshot = await getDocs(q);
+      hierarchyContainer.innerHTML = '';
+      if (querySnapshot.empty) {
+        hierarchyContainer.innerHTML = '<p>Список ролей пуст.</p>';
+        return;
+      }
+      querySnapshot.forEach((doc) => {
+        const role = doc.data();
+        const card = createRoleCard(role, doc.id);
+        hierarchyContainer.appendChild(card);
+      });
+    } catch (err) {
+      console.error("Ошибка загрузки:", err);
+      hierarchyContainer.innerHTML = '<p style="color: red;">Ошибка загрузки данных</p>';
+    }
+  }
+
+  function createRoleCard(role, docId) {
+    const card = document.createElement('div');
+    card.className = `role-card ${role.disabled ? 'disabled' : ''}`;
+    card.innerHTML = `
+      <div class="role-title">${role.role}</div>
+      <div class="nickname">${role.nickname}</div>
+      <div class="links">
+        ${role.link1 ? `<a href="${role.link1}" target="_blank" class="link">Ссылка 1</a>` : ''}
+        ${role.link2 ? `<a href="${role.link2}" target="_blank" class="link">Ссылка 2</a>` : ''}
+        ${role.link3 ? `<a href="${role.link3}" target="_blank" class="link">Ссылка 3</a>` : ''}
+      </div>
+      ${role.warnings > 0 ? `<div class="warnings">Выговоров: ${role.warnings}</div>` : ''}
+      ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
+    `;
+
+    if (currentUser) {
+      const editBtn = card.querySelector('.edit-btn');
+      editBtn.addEventListener('click', () => openEditModal(docId, role));
+    }
+    return card;
+  }
+
+  // Открытие модалки
+  addBtn.addEventListener('click', () => {
+    editingDocId = null;
+    modalTitle.textContent = 'Добавить роль';
+    roleForm.reset();
+    document.getElementById('disabled').checked = false;
+    modal.classList.add('active');
+  });
+
+  function openEditModal(docId, role) {
+    editingDocId = docId;
+    document.getElementById('roleSelect').value = role.role;
+    document.getElementById('nickname').value = role.nickname;
+    document.getElementById('link1').value = role.link1 || '';
+    document.getElementById('link2').value = role.link2 || '';
+    document.getElementById('link3').value = role.link3 || '';
+    document.getElementById('warnings').value = role.warnings || 0;
+    document.getElementById('disabled').checked = role.disabled || false;
+    modalTitle.textContent = 'Редактировать';
+    modal.classList.add('active');
+  }
+
+  // Закрытие модалок
+  closeModal.onclick = () => modal.classList.remove('active');
+  window.onclick = (e) => {
+    if (e.target === modal) modal.classList.remove('active');
+    if (e.target === loginModal) loginModal.classList.remove('active');
+  };
+
+  // Авторизация
+  authBtn.onclick = () => {
+    if (currentUser) {
+      signOut(auth);
+    } else {
+      loginModal.classList.add('active');
+    }
+  };
+
+  loginForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      loginModal.classList.remove('active');
+      loginForm.reset();
+    } catch (err) {
+      alert('Ошибка: ' + err.message);
+    }
+  };
+
+  // Сохранение роли
+  roleForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const data = {
+      role: document.getElementById('roleSelect').value,
+      nickname: document.getElementById('nickname').value.trim(),
+      link1: document.getElementById('link1').value.trim(),
+      link2: document.getElementById('link2').value.trim(),
+      link3: document.getElementById('link3').value.trim(),
+      warnings: parseInt(document.getElementById('warnings').value) || 0,
+      disabled: document.getElementById('disabled').checked,
+      createdAt: new Date()
+    };
+
+    try {
+      if (editingDocId) {
+        await updateDoc(doc(db, "roles", editingDocId), data);
+      } else {
+        await addDoc(collection(db, "roles"), data);
+      }
+      modal.classList.remove('active');
+      roleForm.reset();
+    } catch (err) {
+      alert('Ошибка сохранения: ' + err.message);
+    }
+  };
+</script>
+
+</body>
+</html>
