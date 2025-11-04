@@ -5,6 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Состав Админов</title>
   <style>
+.links {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.link-btn {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  outline: none;
+  transition: all 0.2s ease;
+  white-space: nowrap; /* чтобы текст не переносился */
+  width: fit-content;   /* ширина по содержимому */
+}
+
+.link-btn:hover {
+  background: rgba(76, 201, 240, 0.15);
+  color: var(--accent);
+}
     :root {
       --bg: #0f0f1b;
       --card-bg: #1a1a2e;
@@ -474,26 +501,42 @@
   }
 
   function createRoleCard(role, docId) {
-    const card = document.createElement('div');
-    card.className = `role-card ${role.disabled ? 'disabled' : ''} ${role.warnings > 0 ? 'warning' : ''}`;
-    card.innerHTML = `
-      <div class="role-title">${role.role}</div>
-      <div class="nickname">${role.nickname}</div>
-      <div class="links">
-        ${role.link1 ? `<a href="${role.link1}" target="_blank" class="link">Сайт</a>` : ''}
-        ${role.link2 ? `<a href="${role.link2}" target="_blank" class="link">Стим</a>` : ''}
-        ${role.link3 ? `<a href="${role.link3}" target="_blank" class="link">ТГ</a>` : ''}
-      </div>
-      ${role.warnings > 0 ? `<div class="warnings">Выговоров: ${role.warnings}</div>` : ''}
-      ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
-    `;
-
-    if (currentUser) {
-      const editBtn = card.querySelector('.edit-btn');
-      editBtn.addEventListener('click', () => openEditModal(docId, role));
+  const card = document.createElement('div');
+  card.className = `role-card ${role.disabled ? 'disabled' : ''} ${role.warnings > 0 ? 'warning' : ''}`;
+  
+  // Функция для безопасного открытия ссылок
+  const openLink = (url) => {
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
-    return card;
+  };
+
+  card.innerHTML = `
+    <div class="role-title">${role.role}</div>
+    <div class="nickname">${role.nickname}</div>
+    <div class="links">
+      ${role.link1 ? `<button type="button" class="link-btn" data-url="${role.link1}">Сайт</button>` : ''}
+      ${role.link2 ? `<button type="button" class="link-btn" data-url="${role.link2}">Стим</button>` : ''}
+      ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
+    </div>
+    ${role.warnings > 0 ? `<div class="warnings">Выговоров: ${role.warnings}</div>` : ''}
+    ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
+  `;
+
+  // Добавляем обработчики кликов для кнопок-ссылок
+  card.querySelectorAll('.link-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openLink(btn.dataset.url);
+    });
+  });
+
+  if (currentUser) {
+    const editBtn = card.querySelector('.edit-btn');
+    editBtn.addEventListener('click', () => openEditModal(docId, role));
   }
+
+  return card;
+}
 
   // Слушатели
   searchInput.addEventListener('input', renderRoles);
