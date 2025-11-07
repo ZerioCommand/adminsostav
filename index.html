@@ -5,6 +5,116 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Состав Админов</title>
   <style>
+/* Стили для уведомлений */
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+}
+
+.notification {
+  background: var(--card-bg);
+  border: 1px solid;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  transform: translateX(400px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-height: 0;
+  overflow: hidden;
+}
+
+.notification.show {
+  transform: translateX(0);
+  opacity: 1;
+  max-height: 200px;
+}
+
+.notification.hide {
+  transform: translateX(400px);
+  opacity: 0;
+  max-height: 0;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.notification.success {
+  border-color: #2ecc71;
+  background: rgba(46, 204, 113, 0.1);
+}
+
+.notification.error {
+  border-color: var(--danger);
+  background: rgba(247, 37, 133, 0.1);
+}
+
+.notification.warning {
+  border-color: #f39c12;
+  background: rgba(243, 156, 18, 0.1);
+}
+
+.notification.info {
+  border-color: var(--accent);
+  background: rgba(76, 201, 240, 0.1);
+}
+
+.notification-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.notification-message {
+  font-size: 14px;
+  line-height: 1.4;
+  color: rgba(230, 230, 255, 0.9);
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notification-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.role-section > div {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Добавляем пробел между карточками */
+}
 .links {
   display: flex;
   gap: 6px;
@@ -50,7 +160,7 @@
     .header { display: flex; justify-content: flex-end; padding: 12px 0; }
     .avatar {
       width: 40px; height: 40px; border-radius: 50%;
-      background: var(--accent); display: flex; align-items: center;
+      background: transparent;; display: flex; align-items: center;
       justify-content: center; cursor: pointer;
     }
     .avatar img {
@@ -60,15 +170,20 @@
       object-fit: cover;
     }
     .add-btn {
-      position: fixed; bottom: 24px; right: 24px;
-      width: 56px; height: 56px; border-radius: 50%;
-      background: var(--accent); color: #0f0f1b;
-      font-size: 26px; display: flex; align-items: center;
-      justify-content: center; cursor: pointer;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-      opacity: 0; visibility: hidden; transform: scale(0);
-      transition: all 0.3s ease; z-index: 10;
-    }
+  position: fixed; bottom: 24px; right: 24px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: transparent; /* Убираем фон */
+  font-size: 26px; display: flex; align-items: center;
+  justify-content: center; cursor: pointer;
+  box-shadow: none; /* Убираем тень */
+  opacity: 0; visibility: hidden; transform: scale(0);
+  transition: all 0.3s ease; z-index: 10;
+  border: none;
+  background-image: url('https://i.postimg.cc/L4VzQSHW/3d-plus-dynamic-gradient-icon-1082964-122.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
     .add-btn.visible {
       opacity: 1; visibility: visible; transform: scale(1);
     }
@@ -123,6 +238,40 @@
       opacity: 0;
       transform: translateY(10px);
       animation: fadeIn 0.4s forwards;
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+    .role-card.editable {
+      cursor: pointer;
+    }
+    .role-card.editable:hover {
+      background: #1f1f38;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+      transform: translateY(-2px);
+    }
+    .edit-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(76, 201, 240, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+    .role-card.editable:hover .edit-overlay {
+      opacity: 1;
+    }
+    .edit-text {
+      color: var(--accent);
+      font-weight: bold;
+      font-size: 18px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
     @keyframes fadeIn {
       to { opacity: 1; transform: translateY(0); }
@@ -148,6 +297,7 @@
       display: flex;
       align-items: center;
       gap: 4px;
+      transition: all 0.3s ease;
     }
     
     .warnings-badge.no-warnings {
@@ -161,12 +311,8 @@
       border-radius: 50%; cursor: pointer;
       opacity: 0; visibility: hidden;
     }
-    .role-card:hover .edit-btn {
-      opacity: 1; visibility: visible;
-    }
-    
     .role-card:hover .warnings-badge {
-      top: 45px;
+      top: 10px;
     }
     
     .modal {
@@ -208,6 +354,67 @@
       margin-bottom: 0;
     }
     
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding: 10px;
+      background: #2d2d44;
+      border-radius: 8px;
+      border: 1px solid #444;
+    }
+    
+    .toggle-label {
+      margin-bottom: 0;
+      font-weight: bold;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #444;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .toggle-slider {
+      background-color: var(--accent);
+    }
+    
+    input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+    }
+    
     button {
       background: var(--accent); color: #0f0f1b;
       border: none; padding: 10px 20px;
@@ -223,6 +430,7 @@
       position: absolute; top: 12px; right: 12px;
       background: none; border: none; color: var(--text);
       font-size: 22px; cursor: pointer;
+      display: none;
     }
     .spinner {
       display: inline-block;
@@ -256,8 +464,9 @@
 <body>
 
 <div class="header">
+<div class="notification-container" id="notificationContainer"></div>
   <div class="avatar" id="authBtn">
-    <img src="https://your-image-url-here.com/avatar.png" alt="Аватар" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'">
+    <img src="https://i.postimg.cc/bw6qvcFL/Bez-imeni-2.png" alt="Аватар" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'">
   </div>
 </div>
 
@@ -277,7 +486,7 @@
   <div style="text-align:center; padding:20px;"><div class="spinner"></div></div>
 </div>
 
-<div class="add-btn" id="addBtn">+</div>
+<div class="add-btn" id="addBtn"></div>
 
 <div class="modal" id="modal">
   <div class="modal-content">
@@ -291,6 +500,7 @@
           <option value="Совладелец">Совладелец</option>
           <option value="Руководство">Руководство</option>
           <option value="Гл. Админ">Гл. Админ</option>
+          <option value="Зам.Га">Зам.Га</option>
           <option value="Покупной Админ">Покупной Админ</option>
           <option value="Админ 2лвл">Админ 2лвл</option>
           <option value="Админ 1лвл">Админ 1лвл</option>
@@ -325,9 +535,14 @@
         </div>
       </div>
       
-      <div class="form-group">
-        <label><input type="checkbox" id="disabled"> Отключено</label>
+      <div class="toggle-group">
+        <span class="toggle-label">Отключено</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="disabled">
+          <span class="toggle-slider"></span>
+        </label>
       </div>
+      
       <button type="submit">Сохранить</button>
       <button type="button" id="deleteBtn">Удалить</button>
     </form>
@@ -374,10 +589,11 @@
     "Совладелец": 2,
     "Руководство": 3,
     "Гл. Админ": 4,
-    "Покупной Админ": 5,
-    "Админ 2лвл": 6,
-    "Админ 1лвл": 7,
-    "Стажер": 8
+    "Зам.Га": 5,
+    "Покупной Админ": 6,
+    "Админ 2лвл": 7,
+    "Админ 1лвл": 8,
+    "Стажер": 9
   };
 
   const hierarchyContainer = document.getElementById('hierarchyContainer');
@@ -400,6 +616,61 @@
 
   const CACHE_KEY = 'roles_cache';
   const CACHE_EXPIRY = 5 * 60 * 1000;
+
+  // Функция для показа уведомлений
+  function showNotification(title, message, type = 'info', duration = 5000) {
+    const container = document.getElementById('notificationContainer');
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    const icons = {
+      success: '✅',
+      error: '❌',
+      warning: '⚠️',
+      info: 'ℹ️'
+    };
+    
+    notification.innerHTML = `
+      <div class="notification-icon">${icons[type]}</div>
+      <div class="notification-content">
+        <div class="notification-title">${title}</div>
+        <div class="notification-message">${message}</div>
+      </div>
+      <button class="notification-close">&times;</button>
+    `;
+    
+    container.appendChild(notification);
+    
+    // Анимация появления
+    setTimeout(() => notification.classList.add('show'), 10);
+    
+    // Закрытие по кнопке
+    const closeBtn = notification.querySelector('.notification-close');
+    closeBtn.addEventListener('click', () => {
+      closeNotification(notification);
+    });
+    
+    // Автоматическое закрытие
+    if (duration > 0) {
+      setTimeout(() => {
+        if (notification.parentNode) {
+          closeNotification(notification);
+        }
+      }, duration);
+    }
+    
+    return notification;
+  }
+
+  function closeNotification(notification) {
+    notification.classList.remove('show');
+    notification.classList.add('hide');
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 400);
+  }
 
   function showOfflineBanner(show = true) {
     offlineBanner.style.display = show ? 'block' : 'none';
@@ -456,13 +727,15 @@
         showOfflineBanner(false);
       } catch (err) {
         console.error("Ошибка загрузки из Firebase:", err);
+        showNotification('Ошибка загрузки', 'Не удалось загрузить данные из сервера', 'error', 5000);
         if (useCache) {
           data = getCachedData();
           fromCache = !!data;
           if (fromCache) {
             showOfflineBanner(true);
+            showNotification('Используется кэш', 'Данные загружены из кэша', 'warning', 4000);
           } else {
-            hierarchyContainer.innerHTML = '<p style="color: red; text-align: center;">Ошибка загрузки данных</p>';
+            hierarchyContainer.innerHTML = '<p style="color: #f72585; text-align: center;">Ошибка загрузки данных</p>';
             return;
           }
         }
@@ -472,8 +745,10 @@
       fromCache = !!data;
       if (fromCache) {
         showOfflineBanner(true);
+        showNotification('Офлайн режим', 'Данные загружены из кэша', 'info', 4000);
       } else {
         hierarchyContainer.innerHTML = '<p style="color: #f72585; text-align: center;">Нет подключения к интернету и нет кэша</p>';
+        showNotification('Нет данных', 'Нет подключения к интернету и кэшированных данных', 'error', 5000);
         return;
       }
     }
@@ -543,7 +818,7 @@
 
   function createRoleCard(role, docId) {
     const card = document.createElement('div');
-    card.className = `role-card ${role.disabled ? 'disabled' : ''} ${(role.warningsIssued || 0) > 0 ? 'warning' : ''}`;
+    card.className = `role-card ${role.disabled ? 'disabled' : ''} ${(role.warningsIssued || 0) > 0 ? 'warning' : ''} ${currentUser ? 'editable' : ''}`;
 
     const openLink = (url) => {
       if (url) window.open(url, '_blank', 'noopener,noreferrer');
@@ -556,10 +831,15 @@
     const warningsMax = role.warningsMax || 3;
     const warningsBadgeClass = warningsIssued > 0 ? '' : 'no-warnings';
 
+    // Отключенные карточки не показывают выговоры
+    const showWarningsBadge = !role.disabled;
+
     card.innerHTML = `
+      ${showWarningsBadge ? `
       <div class="warnings-badge ${warningsBadgeClass}">
         ⚠️ ${warningsIssued}/${warningsMax}
       </div>
+      ` : ''}
       
       <div class="role-title">${role.role}</div>
       <div class="nickname">${role.nickname}</div>
@@ -576,7 +856,11 @@
         ${vacationText}
       </div>
 
-      ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
+      ${currentUser ? `
+        <div class="edit-overlay">
+          <div class="edit-text">Редактировать</div>
+        </div>
+      ` : ''}
     `;
 
     card.querySelectorAll('.link-btn').forEach(btn => {
@@ -585,20 +869,31 @@
 
     const vacationBtn = card.querySelector('.vacation-status');
     if (currentUser) {
-      vacationBtn.addEventListener('click', async () => {
+      vacationBtn.addEventListener('click', async (e) => {
+        e.stopPropagation(); // Предотвращаем открытие формы редактирования
         const newStatus = !role.onVacation;
         try {
           await updateDoc(doc(db, "roles", docId), { onVacation: newStatus });
           await loadAndRenderRoles();
+          showNotification(
+            'Статус обновлен', 
+            `${role.nickname} ${newStatus ? 'в отпуске' : 'работает'}`,
+            'success', 
+            3000
+          );
         } catch (err) {
-          alert('Ошибка изменения статуса: ' + err.message);
+          showNotification('Ошибка', 'Не удалось изменить статус отпуска: ' + err.message, 'error', 5000);
         }
       });
     }
 
     if (currentUser) {
-      const editBtn = card.querySelector('.edit-btn');
-      editBtn.addEventListener('click', () => openEditModal(docId, role));
+      card.addEventListener('click', (e) => {
+        // Не открываем редактирование при клике на кнопки ссылок или статус отпуска
+        if (!e.target.closest('.link-btn') && !e.target.closest('.vacation-status') && !e.target.closest('.warnings-badge')) {
+          openEditModal(docId, role);
+        }
+      });
     }
 
     return card;
@@ -614,6 +909,19 @@
     document.getElementById('warningsIssued').value = role.warningsIssued || 0;
     document.getElementById('warningsMax').value = role.warningsMax || 3;
     document.getElementById('disabled').checked = role.disabled || false;
+    
+    // При открытии формы редактирования проверяем состояние переключателя
+    const warningsIssuedInput = document.getElementById('warningsIssued');
+    if (role.disabled) {
+      warningsIssuedInput.disabled = true;
+      warningsIssuedInput.style.opacity = '0.6';
+      warningsIssuedInput.style.cursor = 'not-allowed';
+    } else {
+      warningsIssuedInput.disabled = false;
+      warningsIssuedInput.style.opacity = '1';
+      warningsIssuedInput.style.cursor = 'text';
+    }
+    
     modalTitle.textContent = 'Редактировать';
     deleteBtn.style.display = 'block';
     modal.classList.add('active');
@@ -628,6 +936,7 @@
   authBtn.onclick = () => {
     if (currentUser) {
       signOut(auth);
+      showNotification('Выход выполнен', 'Вы вышли из системы', 'info', 4000);
     } else {
       loginModal.classList.add('active');
     }
@@ -641,8 +950,9 @@
       await signInWithEmailAndPassword(auth, email, password);
       loginModal.classList.remove('active');
       loginForm.reset();
+      showNotification('Вход выполнен', `Добро пожаловать, ${email}`, 'success', 4000);
     } catch (err) {
-      alert('Ошибка: ' + err.message);
+      showNotification('Ошибка авторизации', err.message, 'error', 6000);
     }
   };
 
@@ -651,6 +961,11 @@
     roleForm.reset();
     document.getElementById('warningsIssued').value = 0;
     document.getElementById('warningsMax').value = 3;
+    // Сбрасываем состояние поля выговоров при добавлении новой роли
+    const warningsIssuedInput = document.getElementById('warningsIssued');
+    warningsIssuedInput.disabled = false;
+    warningsIssuedInput.style.opacity = '1';
+    warningsIssuedInput.style.cursor = 'text';
     modalTitle.textContent = 'Добавить роль';
     deleteBtn.style.display = 'none';
     modal.classList.add('active');
@@ -662,6 +977,7 @@
     const link1 = document.getElementById('link1').value.trim();
     const link2 = document.getElementById('link2').value.trim();
     const link3 = document.getElementById('link3').value.trim();
+    const isDisabled = document.getElementById('disabled').checked;
 
     const data = {
       role: document.getElementById('roleSelect').value,
@@ -669,9 +985,10 @@
       link1,
       link2,
       link3,
-      warningsIssued: parseInt(document.getElementById('warningsIssued').value) || 0,
+      // Если карточка отключена, сбрасываем выговоры до 0
+      warningsIssued: isDisabled ? 0 : parseInt(document.getElementById('warningsIssued').value) || 0,
       warningsMax: parseInt(document.getElementById('warningsMax').value) || 3,
-      disabled: document.getElementById('disabled').checked,
+      disabled: isDisabled,
       onVacation: editingDocId ? (allRoles.find(r => r.id === editingDocId)?.onVacation ?? false) : false,
       createdAt: editingDocId ? (allRoles.find(r => r.id === editingDocId)?.createdAt ?? new Date()) : new Date()
     };
@@ -679,14 +996,16 @@
     try {
       if (editingDocId) {
         await updateDoc(doc(db, "roles", editingDocId), data);
+        showNotification('Успешно', 'Данные обновлены', 'success', 3000);
       } else {
         await addDoc(collection(db, "roles"), data);
+        showNotification('Успешно', 'Новая роль добавлена', 'success', 3000);
       }
       modal.classList.remove('active');
       roleForm.reset();
       await loadAndRenderRoles();
     } catch (err) {
-      alert('Ошибка сохранения: ' + err.message);
+      showNotification('Ошибка сохранения', err.message, 'error', 6000);
     }
   };
 
@@ -697,11 +1016,30 @@
     try {
       await deleteDoc(doc(db, "roles", editingDocId));
       modal.classList.remove('active');
+      showNotification('Успешно', 'Роль удалена', 'success', 3000);
       await loadAndRenderRoles();
     } catch (err) {
-      alert('Ошибка удаления: ' + err.message);
+      showNotification('Ошибка удаления', err.message, 'error', 6000);
     }
   };
+
+  // Обработчик для переключателя "Отключено"
+  document.getElementById('disabled').addEventListener('change', function() {
+    const warningsIssuedInput = document.getElementById('warningsIssued');
+    
+    if (this.checked) {
+      // Если включаем "Отключено", сбрасываем выговоры до 0 и делаем поле неактивным
+      warningsIssuedInput.value = 0;
+      warningsIssuedInput.disabled = true;
+      warningsIssuedInput.style.opacity = '0.6';
+      warningsIssuedInput.style.cursor = 'not-allowed';
+    } else {
+      // Если выключаем "Отключено", возвращаем возможность редактировать выговоры
+      warningsIssuedInput.disabled = false;
+      warningsIssuedInput.style.opacity = '1';
+      warningsIssuedInput.style.cursor = 'text';
+    }
+  });
 
   searchInput.addEventListener('input', renderRoles);
   warningsFilter.addEventListener('change', renderRoles);
@@ -710,6 +1048,7 @@
     currentUser = user;
     if (user) {
       addBtn.classList.add('visible');
+      showNotification('Авторизован', `Добро пожаловать, ${user.email}`, 'success', 4000);
     } else {
       addBtn.classList.remove('visible');
     }
