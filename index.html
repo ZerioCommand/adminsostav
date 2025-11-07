@@ -538,19 +538,20 @@
         ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
       </div>
       <div class="warnings-line">
-        ${currentUser && !role.warningsDisabled ? `
-          <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="-1">–</button>
-        ` : ''}
-        <span class="current-warnings">${currentWarn}</span> / <span class="max-warnings">${maxWarn}</span>
-        ${currentUser && !role.warningsDisabled ? `
-          <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="1">+</button>
-        ` : ''}
-        ${currentUser ? `
-          <button class="link-btn" style="margin-left:auto; padding:4px 8px; font-size:12px;">${role.onLeave ? 'В отпуске' : 'Работает'}</button>
-        ` : ''}
-      </div>
-      ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
-    `;
+        ${!role.warningsDisabled ? `
+  <div class="warnings-line">
+    ${currentUser ? `
+      <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="-1">–</button>
+    ` : ''}
+    <span class="current-warnings">${currentWarn}</span> / <span class="max-warnings">${maxWarn}</span>
+    ${currentUser ? `
+      <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="1">+</button>
+    ` : ''}
+    ${currentUser ? `
+      <button class="link-btn" style="margin-left:auto; padding:4px 8px; font-size:12px;">${role.onLeave ? 'В отпуске' : 'Работает'}</button>
+    ` : ''}
+  </div>
+` : ''}
 
     card.querySelectorAll('.link-btn[data-url]').forEach(btn => {
       btn.addEventListener('click', () => openLink(btn.dataset.url));
@@ -764,4 +765,5 @@
 
 </body>
 </html>
+
 
