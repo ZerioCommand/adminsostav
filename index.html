@@ -134,7 +134,26 @@
     .links { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
     .link { color: var(--text); text-decoration: underline; font-size: 14px; }
     .link:hover { color: var(--accent); }
-    .warnings { font-size: 14px; color: var(--danger); margin-top: 8px; }
+    
+    .warnings-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--danger);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .warnings-badge.no-warnings {
+      background: #2ecc71;
+    }
+    
     .edit-btn {
       position: absolute; top: 10px; right: 10px;
       background: rgba(255,255,255,0.1); border: none;
@@ -145,6 +164,11 @@
     .role-card:hover .edit-btn {
       opacity: 1; visibility: visible;
     }
+    
+    .role-card:hover .warnings-badge {
+      top: 45px;
+    }
+    
     .modal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.7); display: flex;
@@ -172,6 +196,18 @@
       background: #2d2d44; color: var(--text);
       border: 1px solid #444;
     }
+    
+    .warnings-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    
+    .warnings-group .form-group {
+      margin-bottom: 0;
+    }
+    
     button {
       background: var(--accent); color: #0f0f1b;
       border: none; padding: 10px 20px;
@@ -221,7 +257,7 @@
 
 <div class="header">
   <div class="avatar" id="authBtn">
-    <img src="https://your-image-url-here.com/avatar.png  " alt="Аватар" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'">
+    <img src="https://your-image-url-here.com/avatar.png" alt="Аватар" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'">
   </div>
 </div>
 
@@ -267,20 +303,28 @@
       </div>
       <div class="form-group">
         <label>Сайт</label>
-        <input type="url" id="link1" placeholder="https://example.com  ">
+        <input type="url" id="link1" placeholder="https://example.com">
       </div>
       <div class="form-group">
         <label>Стим</label>
-        <input type="url" id="link2" placeholder="https://steamcommunity.com/id/...  ">
+        <input type="url" id="link2" placeholder="https://steamcommunity.com/id/...">
       </div>
       <div class="form-group">
         <label>ТГ</label>
-        <input type="url" id="link3" placeholder="https://t.me/...  ">
+        <input type="url" id="link3" placeholder="https://t.me/...">
       </div>
-      <div class="form-group">
-        <label>Выговоры</label>
-        <input type="number" id="warnings" min="0" value="0">
+      
+      <div class="warnings-group">
+        <div class="form-group">
+          <label>Выдано выговоров</label>
+          <input type="number" id="warningsIssued" min="0" max="999" value="0">
+        </div>
+        <div class="form-group">
+          <label>Макс. выговоров</label>
+          <input type="number" id="warningsMax" min="1" max="999" value="3">
+        </div>
       </div>
+      
       <div class="form-group">
         <label><input type="checkbox" id="disabled"> Отключено</label>
       </div>
@@ -308,9 +352,9 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js  ";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js  ";
-  import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js  ";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCdVnWilNkGMkf7BQZmGLuVpEqUTPLjIj0",
@@ -463,8 +507,9 @@
     const showOnlyWarnings = warningsFilter.checked;
 
     const filteredRoles = allRoles.filter(role => {
+      const warningsIssued = role.warningsIssued || 0;
       const matchesSearch = role.nickname.toLowerCase().includes(searchTerm);
-      const matchesWarnings = !showOnlyWarnings || (role.warnings > 0);
+      const matchesWarnings = !showOnlyWarnings || (warningsIssued > 0);
       return matchesSearch && matchesWarnings;
     });
 
@@ -497,63 +542,67 @@
   }
 
   function createRoleCard(role, docId) {
-  const card = document.createElement('div');
-  card.className = `role-card ${role.disabled ? 'disabled' : ''} ${role.warnings > 0 ? 'warning' : ''}`;
+    const card = document.createElement('div');
+    card.className = `role-card ${role.disabled ? 'disabled' : ''} ${(role.warningsIssued || 0) > 0 ? 'warning' : ''}`;
 
-  const openLink = (url) => {
-    if (url) window.open(url, '_blank', 'noopener,noreferrer');
-  };
+    const openLink = (url) => {
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+    };
 
-  const vacationText = role.onVacation ? '🟡 В отпуске' : '🟢 Работает';
-  const vacationColor = role.onVacation ? '#f1c40f' : '#2ecc71';
+    const vacationText = role.onVacation ? '🟡 В отпуске' : '🟢 Работает';
+    const vacationColor = role.onVacation ? '#f1c40f' : '#2ecc71';
+    
+    const warningsIssued = role.warningsIssued || 0;
+    const warningsMax = role.warningsMax || 3;
+    const warningsBadgeClass = warningsIssued > 0 ? '' : 'no-warnings';
 
-  card.innerHTML = `
-    <div class="role-title">${role.role}</div>
-    <div class="nickname">${role.nickname}</div>
-    <div class="links">
-      ${role.link1 ? `<button type="button" class="link-btn" data-url="${role.link1}">Сайт</button>` : ''}
-      ${role.link2 ? `<button type="button" class="link-btn" data-url="${role.link2}">Стим</button>` : ''}
-      ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
-    </div>
-    ${role.warnings > 0 ? `<div class="warnings">Выговоров: ${role.warnings}</div>` : ''}
+    card.innerHTML = `
+      <div class="warnings-badge ${warningsBadgeClass}">
+        ⚠️ ${warningsIssued}/${warningsMax}
+      </div>
+      
+      <div class="role-title">${role.role}</div>
+      <div class="nickname">${role.nickname}</div>
+      <div class="links">
+        ${role.link1 ? `<button type="button" class="link-btn" data-url="${role.link1}">Сайт</button>` : ''}
+        ${role.link2 ? `<button type="button" class="link-btn" data-url="${role.link2}">Стим</button>` : ''}
+        ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
+      </div>
 
-    <div class="vacation-status" 
-         style="position:absolute; bottom:10px; right:10px; background:${vacationColor};
-                color:#0f0f1b; font-weight:bold; border:none; border-radius:8px;
-                padding:6px 10px; cursor:${currentUser ? 'pointer' : 'default'}; font-size:13px;">
-      ${vacationText}
-    </div>
+      <div class="vacation-status" 
+           style="position:absolute; bottom:10px; right:10px; background:${vacationColor};
+                  color:#0f0f1b; font-weight:bold; border:none; border-radius:8px;
+                  padding:6px 10px; cursor:${currentUser ? 'pointer' : 'default'}; font-size:13px;">
+        ${vacationText}
+      </div>
 
-    ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
-  `;
+      ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
+    `;
 
-  // Ссылки
-  card.querySelectorAll('.link-btn').forEach(btn => {
-    btn.addEventListener('click', () => openLink(btn.dataset.url));
-  });
-
-  // Изменение статуса (только для авторизованных)
-  const vacationBtn = card.querySelector('.vacation-status');
-  if (currentUser) {
-    vacationBtn.addEventListener('click', async () => {
-      const newStatus = !role.onVacation;
-      try {
-        await updateDoc(doc(db, "roles", docId), { onVacation: newStatus });
-        await loadAndRenderRoles();
-      } catch (err) {
-        alert('Ошибка изменения статуса: ' + err.message);
-      }
+    card.querySelectorAll('.link-btn').forEach(btn => {
+      btn.addEventListener('click', () => openLink(btn.dataset.url));
     });
+
+    const vacationBtn = card.querySelector('.vacation-status');
+    if (currentUser) {
+      vacationBtn.addEventListener('click', async () => {
+        const newStatus = !role.onVacation;
+        try {
+          await updateDoc(doc(db, "roles", docId), { onVacation: newStatus });
+          await loadAndRenderRoles();
+        } catch (err) {
+          alert('Ошибка изменения статуса: ' + err.message);
+        }
+      });
+    }
+
+    if (currentUser) {
+      const editBtn = card.querySelector('.edit-btn');
+      editBtn.addEventListener('click', () => openEditModal(docId, role));
+    }
+
+    return card;
   }
-
-  if (currentUser) {
-    const editBtn = card.querySelector('.edit-btn');
-    editBtn.addEventListener('click', () => openEditModal(docId, role));
-  }
-
-  return card;
-}
-
 
   function openEditModal(docId, role) {
     editingDocId = docId;
@@ -562,7 +611,8 @@
     document.getElementById('link1').value = role.link1 || '';
     document.getElementById('link2').value = role.link2 || '';
     document.getElementById('link3').value = role.link3 || '';
-    document.getElementById('warnings').value = role.warnings || 0;
+    document.getElementById('warningsIssued').value = role.warningsIssued || 0;
+    document.getElementById('warningsMax').value = role.warningsMax || 3;
     document.getElementById('disabled').checked = role.disabled || false;
     modalTitle.textContent = 'Редактировать';
     deleteBtn.style.display = 'block';
@@ -596,39 +646,49 @@
     }
   };
 
-  roleForm.onsubmit = async (e) => {
-  e.preventDefault();
-
-  const link1 = document.getElementById('link1').value.trim();
-  const link2 = document.getElementById('link2').value.trim();
-  const link3 = document.getElementById('link3').value.trim();
-
-  const data = {
-  role: document.getElementById('roleSelect').value,
-  nickname: document.getElementById('nickname').value.trim(),
-  link1,
-  link2,
-  link3,
-  warnings: parseInt(document.getElementById('warnings').value) || 0,
-  disabled: document.getElementById('disabled').checked,
-  onVacation: role?.onVacation ?? false,
-  createdAt: new Date()
-};
-
-
-  try {
-    if (editingDocId) {
-      await updateDoc(doc(db, "roles", editingDocId), data);
-    } else {
-      await addDoc(collection(db, "roles"), data);
-    }
-    modal.classList.remove('active');
+  addBtn.onclick = () => {
+    editingDocId = null;
     roleForm.reset();
-    await loadAndRenderRoles();
-  } catch (err) {
-    alert('Ошибка сохранения: ' + err.message);
-  }
-};
+    document.getElementById('warningsIssued').value = 0;
+    document.getElementById('warningsMax').value = 3;
+    modalTitle.textContent = 'Добавить роль';
+    deleteBtn.style.display = 'none';
+    modal.classList.add('active');
+  };
+
+  roleForm.onsubmit = async (e) => {
+    e.preventDefault();
+
+    const link1 = document.getElementById('link1').value.trim();
+    const link2 = document.getElementById('link2').value.trim();
+    const link3 = document.getElementById('link3').value.trim();
+
+    const data = {
+      role: document.getElementById('roleSelect').value,
+      nickname: document.getElementById('nickname').value.trim(),
+      link1,
+      link2,
+      link3,
+      warningsIssued: parseInt(document.getElementById('warningsIssued').value) || 0,
+      warningsMax: parseInt(document.getElementById('warningsMax').value) || 3,
+      disabled: document.getElementById('disabled').checked,
+      onVacation: editingDocId ? (allRoles.find(r => r.id === editingDocId)?.onVacation ?? false) : false,
+      createdAt: editingDocId ? (allRoles.find(r => r.id === editingDocId)?.createdAt ?? new Date()) : new Date()
+    };
+
+    try {
+      if (editingDocId) {
+        await updateDoc(doc(db, "roles", editingDocId), data);
+      } else {
+        await addDoc(collection(db, "roles"), data);
+      }
+      modal.classList.remove('active');
+      roleForm.reset();
+      await loadAndRenderRoles();
+    } catch (err) {
+      alert('Ошибка сохранения: ' + err.message);
+    }
+  };
 
   deleteBtn.onclick = async () => {
     if (!editingDocId) return;
@@ -643,6 +703,9 @@
     }
   };
 
+  searchInput.addEventListener('input', renderRoles);
+  warningsFilter.addEventListener('change', renderRoles);
+
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
     if (user) {
@@ -656,50 +719,50 @@
   if (!isOnline()) {
     loadAndRenderRoles();
   }
-document.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
-  location.reload();
-});
 
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'F12') {
+  document.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     location.reload();
-  }
+  });
 
-  if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
-    e.preventDefault();
-    location.reload();
-  }
-
-  if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
-    e.preventDefault();
-    location.reload();
-  }
-
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
-    e.preventDefault();
-    location.reload();
-  }
-});
-
-let devtools = false;
-const threshold = 160;
-
-setInterval(() => {
-  if (window.outerHeight - window.innerHeight > threshold || 
-      window.outerWidth - window.innerWidth > threshold) {
-    if (!devtools) {
-      devtools = true;
-      window.open(location.href, '_blank');
-      setTimeout(() => location.reload(), 100);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'F12') {
+      e.preventDefault();
+      location.reload();
     }
-  } else {
-    devtools = false;
-  }
-}, 1000);
+
+    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+      e.preventDefault();
+      location.reload();
+    }
+
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+      e.preventDefault();
+      location.reload();
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
+      e.preventDefault();
+      location.reload();
+    }
+  });
+
+  let devtools = false;
+  const threshold = 160;
+
+  setInterval(() => {
+    if (window.outerHeight - window.innerHeight > threshold || 
+        window.outerWidth - window.innerWidth > threshold) {
+      if (!devtools) {
+        devtools = true;
+        window.open(location.href, '_blank');
+        setTimeout(() => location.reload(), 100);
+      }
+    } else {
+      devtools = false;
+    }
+  }, 1000);
 </script>
 
 </body>
 </html>
-
