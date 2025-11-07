@@ -127,10 +127,14 @@
     @keyframes fadeIn {
       to { opacity: 1; transform: translateY(0); }
     }
+    .role-card.disabled { opacity: 0.6; }
     .role-card.warning { background: var(--warning-bg); }
     .role-title { font-size: 17px; font-weight: bold; margin-bottom: 6px; color: var(--accent); }
     .nickname { font-size: 19px; margin-bottom: 10px; }
-    .warnings-line { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .links { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+    .link { color: var(--text); text-decoration: underline; font-size: 14px; }
+    .link:hover { color: var(--accent); }
+    .warnings { font-size: 14px; color: var(--danger); margin-top: 8px; }
     .edit-btn {
       position: absolute; top: 10px; right: 10px;
       background: rgba(255,255,255,0.1); border: none;
@@ -217,7 +221,7 @@
 
 <div class="header">
   <div class="avatar" id="authBtn">
-    <img src="https://your-image-url-here.com/avatar.png" alt="Аватар" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'">
+    <img src="https://your-image-url-here.com/avatar.png  " alt="Аватар" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'">
   </div>
 </div>
 
@@ -263,30 +267,22 @@
       </div>
       <div class="form-group">
         <label>Сайт</label>
-        <input type="url" id="link1" placeholder="https://example.com">
+        <input type="url" id="link1" placeholder="https://example.com  ">
       </div>
       <div class="form-group">
         <label>Стим</label>
-        <input type="url" id="link2" placeholder="https://steamcommunity.com/id/...">
+        <input type="url" id="link2" placeholder="https://steamcommunity.com/id/...  ">
       </div>
       <div class="form-group">
         <label>ТГ</label>
-        <input type="url" id="link3" placeholder="https://t.me/...">
+        <input type="url" id="link3" placeholder="https://t.me/...  ">
       </div>
-      <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
-        <div style="display:flex; gap:12px;">
-          <div style="flex:1;">
-            <label>Текущие выговоры</label>
-            <input type="number" id="warnings" min="0" value="0">
-          </div>
-          <div style="flex:1;">
-            <label>Макс. выговоров</label>
-            <input type="number" id="maxWarnings" min="1" value="3">
-          </div>
-        </div>
-        <button type="button" id="toggleWarningsBtn" class="link-btn" style="align-self:flex-start; padding:6px 12px; width:auto;">
-          Отключить выговоры
-        </button>
+      <div class="form-group">
+        <label>Выговоры</label>
+        <input type="number" id="warnings" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label><input type="checkbox" id="disabled"> Отключено</label>
       </div>
       <button type="submit">Сохранить</button>
       <button type="button" id="deleteBtn">Удалить</button>
@@ -312,9 +308,9 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js  ";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js  ";
+  import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js  ";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCdVnWilNkGMkf7BQZmGLuVpEqUTPLjIj0",
@@ -353,7 +349,6 @@
   const deleteBtn = document.getElementById('deleteBtn');
   const warningsFilter = document.getElementById('warningsFilter');
   const offlineBanner = document.getElementById('offlineBanner');
-  const toggleWarningsBtn = document.getElementById('toggleWarningsBtn');
 
   let currentUser = null;
   let editingDocId = null;
@@ -469,7 +464,7 @@
 
     const filteredRoles = allRoles.filter(role => {
       const matchesSearch = role.nickname.toLowerCase().includes(searchTerm);
-      const matchesWarnings = !showOnlyWarnings || (role.warnings > 0 && !(role.warningsDisabled === true));
+      const matchesWarnings = !showOnlyWarnings || (role.warnings > 0);
       return matchesSearch && matchesWarnings;
     });
 
@@ -501,90 +496,41 @@
     });
   }
 
-  async function incrementWarnings(docId, delta) {
-    const role = allRoles.find(r => r.id === docId);
-    if (!role || role.warningsDisabled) return;
-
-    const maxWarn = role.maxWarnings || 3;
-    const newWarnings = Math.max(0, Math.min(maxWarn, (role.warnings || 0) + delta));
-    try {
-      await updateDoc(doc(db, "roles", docId), { warnings: newWarnings });
-      role.warnings = newWarnings;
-      renderRoles();
-    } catch (err) {
-      alert('Ошибка обновления выговоров: ' + err.message);
-    }
-  }
-
   function createRoleCard(role, docId) {
-    const card = document.createElement('div');
-    card.className = `role-card ${role.warnings > 0 && !role.warningsDisabled ? 'warning' : ''}`;
-    
-    const openLink = (url) => {
-      if (url) {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }
-    };
-
-    const maxWarn = role.maxWarnings || 3;
-    const currentWarn = role.warnings || 0;
-
-    card.innerHTML = `
-      <div class="role-title">${role.role}</div>
-      <div class="nickname">${role.nickname}</div>
-      <div class="links">
-        ${role.link1 ? `<button type="button" class="link-btn" data-url="${role.link1}">Сайт</button>` : ''}
-        ${role.link2 ? `<button type="button" class="link-btn" data-url="${role.link2}">Стим</button>` : ''}
-        ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
-      </div>
-      <div class="warnings-line">
-        ${!role.warningsDisabled ? `
-  <div class="warnings-line">
-    ${currentUser ? `
-      <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="-1">–</button>
-    ` : ''}
-    <span class="current-warnings">${currentWarn}</span> / <span class="max-warnings">${maxWarn}</span>
-    ${currentUser ? `
-      <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="1">+</button>
-    ` : ''}
-    ${currentUser ? `
-      <button class="link-btn" style="margin-left:auto; padding:4px 8px; font-size:12px;">${role.onLeave ? 'В отпуске' : 'Работает'}</button>
-    ` : ''}
-  </div>
-` : ''}
-
-    card.querySelectorAll('.link-btn[data-url]').forEach(btn => {
-      btn.addEventListener('click', () => openLink(btn.dataset.url));
-    });
-
-    if (currentUser) {
-      card.querySelectorAll('.link-btn[data-delta]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const delta = parseInt(btn.dataset.delta);
-          incrementWarnings(docId, delta);
-        });
-      });
-
-      const editBtn = card.querySelector('.edit-btn');
-      editBtn.addEventListener('click', () => openEditModal(docId, role));
-      
-      const statusBtn = card.querySelector('.link-btn:last-of-type:not([data-url]):not([data-delta])');
-      if (statusBtn) {
-        statusBtn.addEventListener('click', async () => {
-          const newStatus = !role.onLeave;
-          try {
-            await updateDoc(doc(db, "roles", docId), { onLeave: newStatus });
-            role.onLeave = newStatus;
-            renderRoles();
-          } catch (err) {
-            alert('Ошибка изменения статуса: ' + err.message);
-          }
-        });
-      }
+  const card = document.createElement('div');
+  card.className = `role-card ${role.disabled ? 'disabled' : ''} ${role.warnings > 0 ? 'warning' : ''}`;
+  
+  const openLink = (url) => {
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
+  };
 
-    return card;
+  card.innerHTML = `
+    <div class="role-title">${role.role}</div>
+    <div class="nickname">${role.nickname}</div>
+    <div class="links">
+      ${role.link1 ? `<button type="button" class="link-btn" data-url="${role.link1}">Сайт</button>` : ''}
+      ${role.link2 ? `<button type="button" class="link-btn" data-url="${role.link2}">Стим</button>` : ''}
+      ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
+    </div>
+    ${role.warnings > 0 ? `<div class="warnings">Выговоров: ${role.warnings}</div>` : ''}
+    ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
+  `;
+
+  card.querySelectorAll('.link-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openLink(btn.dataset.url);
+    });
+  });
+
+  if (currentUser) {
+    const editBtn = card.querySelector('.edit-btn');
+    editBtn.addEventListener('click', () => openEditModal(docId, role));
   }
+
+  return card;
+}
 
   searchInput.addEventListener('input', renderRoles);
   warningsFilter.addEventListener('change', renderRoles);
@@ -593,9 +539,7 @@
     editingDocId = null;
     modalTitle.textContent = 'Добавить роль';
     roleForm.reset();
-    document.getElementById('maxWarnings').value = 3;
-    toggleWarningsBtn.textContent = 'Отключить выговоры';
-    document.getElementById('warnings').disabled = false;
+    document.getElementById('disabled').checked = false;
     deleteBtn.style.display = 'none';
     modal.classList.add('active');
   });
@@ -603,37 +547,16 @@
   function openEditModal(docId, role) {
     editingDocId = docId;
     document.getElementById('roleSelect').value = role.role;
-    document.getElementById('nickname').value = role.nickname || '';
+    document.getElementById('nickname').value = role.nickname;
     document.getElementById('link1').value = role.link1 || '';
     document.getElementById('link2').value = role.link2 || '';
     document.getElementById('link3').value = role.link3 || '';
     document.getElementById('warnings').value = role.warnings || 0;
-    document.getElementById('maxWarnings').value = role.maxWarnings || 3;
-    
-    const isDisabled = role.warningsDisabled === true;
-    toggleWarningsBtn.textContent = isDisabled ? 'Включить выговоры' : 'Отключить выговоры';
-    document.getElementById('warnings').disabled = isDisabled;
-
+    document.getElementById('disabled').checked = role.disabled || false;
     modalTitle.textContent = 'Редактировать';
     deleteBtn.style.display = 'block';
     modal.classList.add('active');
   }
-
-  toggleWarningsBtn.addEventListener('click', () => {
-    const warningsInput = document.getElementById('warnings');
-    const isNowDisabled = warningsInput.disabled;
-    
-    if (isNowDisabled) {
-      // Включаем
-      warningsInput.disabled = false;
-      toggleWarningsBtn.textContent = 'Отключить выговоры';
-    } else {
-      // Отключаем
-      warningsInput.disabled = true;
-      warningsInput.value = 0;
-      toggleWarningsBtn.textContent = 'Включить выговоры';
-    }
-  });
 
   closeModal.onclick = () => modal.classList.remove('active');
   window.onclick = (e) => {
@@ -663,37 +586,36 @@
   };
 
   roleForm.onsubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const link1 = document.getElementById('link1').value.trim();
-    const link2 = document.getElementById('link2').value.trim();
-    const link3 = document.getElementById('link3').value.trim();
+  const link1 = document.getElementById('link1').value.trim();
+  const link2 = document.getElementById('link2').value.trim();
+  const link3 = document.getElementById('link3').value.trim();
 
-    const data = {
-  role: document.getElementById('roleSelect').value,
-  nickname: document.getElementById('nickname').value.trim(),
-  link1,
-  link2,
-  link3,
-  warnings: parseInt(document.getElementById('warnings').value) || 0,
-  maxWarnings: parseInt(document.getElementById('maxWarnings').value) || 3,
-  warningsDisabled: document.getElementById('warnings').disabled,
-  ...(editingDocId ? {} : { createdAt: new Date() })
-    };
-
-    try {
-      if (editingDocId) {
-        await updateDoc(doc(db, "roles", editingDocId), data);
-      } else {
-        await addDoc(collection(db, "roles"), data);
-      }
-      modal.classList.remove('active');
-      roleForm.reset();
-      await loadAndRenderRoles();
-    } catch (err) {
-      alert('Ошибка сохранения: ' + err.message);
-    }
+  const data = {
+    role: document.getElementById('roleSelect').value,
+    nickname: document.getElementById('nickname').value.trim(),
+    link1,
+    link2,
+    link3,
+    warnings: parseInt(document.getElementById('warnings').value) || 0,
+    disabled: document.getElementById('disabled').checked,
+    createdAt: new Date()
   };
+
+  try {
+    if (editingDocId) {
+      await updateDoc(doc(db, "roles", editingDocId), data);
+    } else {
+      await addDoc(collection(db, "roles"), data);
+    }
+    modal.classList.remove('active');
+    roleForm.reset();
+    await loadAndRenderRoles();
+  } catch (err) {
+    alert('Ошибка сохранения: ' + err.message);
+  }
+};
 
   deleteBtn.onclick = async () => {
     if (!editingDocId) return;
@@ -721,49 +643,49 @@
   if (!isOnline()) {
     loadAndRenderRoles();
   }
+document.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  location.reload();
+});
 
-  document.addEventListener('contextmenu', (e) => {
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'F12') {
     e.preventDefault();
     location.reload();
-  });
+  }
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'F12') {
-      e.preventDefault();
-      location.reload();
-    }
-    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
-      e.preventDefault();
-      location.reload();
-    }
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
-      e.preventDefault();
-      location.reload();
-    }
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
-      e.preventDefault();
-      location.reload();
-    }
-  });
+  if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+    e.preventDefault();
+    location.reload();
+  }
 
-  let devtools = false;
-  const threshold = 160;
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+    e.preventDefault();
+    location.reload();
+  }
 
-  setInterval(() => {
-    if (window.outerHeight - window.innerHeight > threshold || 
-        window.outerWidth - window.innerWidth > threshold) {
-      if (!devtools) {
-        devtools = true;
-        window.open(location.href, '_blank');
-        setTimeout(() => location.reload(), 100);
-      }
-    } else {
-      devtools = false;
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
+    e.preventDefault();
+    location.reload();
+  }
+});
+
+let devtools = false;
+const threshold = 160;
+
+setInterval(() => {
+  if (window.outerHeight - window.innerHeight > threshold || 
+      window.outerWidth - window.innerWidth > threshold) {
+    if (!devtools) {
+      devtools = true;
+      window.open(location.href, '_blank');
+      setTimeout(() => location.reload(), 100);
     }
-  }, 1000);
+  } else {
+    devtools = false;
+  }
+}, 1000);
 </script>
 
 </body>
 </html>
-
-
