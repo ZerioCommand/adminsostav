@@ -127,14 +127,10 @@
     @keyframes fadeIn {
       to { opacity: 1; transform: translateY(0); }
     }
-    .role-card.disabled { opacity: 0.6; }
     .role-card.warning { background: var(--warning-bg); }
     .role-title { font-size: 17px; font-weight: bold; margin-bottom: 6px; color: var(--accent); }
     .nickname { font-size: 19px; margin-bottom: 10px; }
-    .links { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
-    .link { color: var(--text); text-decoration: underline; font-size: 14px; }
-    .link:hover { color: var(--accent); }
-    .warnings { font-size: 14px; color: var(--danger); margin-top: 8px; }
+    .warnings-line { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
     .edit-btn {
       position: absolute; top: 10px; right: 10px;
       background: rgba(255,255,255,0.1); border: none;
@@ -248,48 +244,53 @@
     <button class="close-modal" id="closeModal">&times;</button>
     <h2 id="modalTitle">Добавить роль</h2>
     <form id="roleForm">
-  <div class="form-group">
-    <label>Роль</label>
-    <select id="roleSelect" required>
-      <option value="Владелец">Владелец</option>
-      <option value="Совладелец">Совладелец</option>
-      <option value="Руководство">Руководство</option>
-      <option value="Гл. Админ">Гл. Админ</option>
-      <option value="Покупной Админ">Покупной Админ</option>
-      <option value="Админ 2лвл">Админ 2лвл</option>
-      <option value="Админ 1лвл">Админ 1лвл</option>
-      <option value="Стажер">Стажер</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label>Никнейм</label>
-    <input type="text" id="nickname" required>
-  </div>
-  <div class="form-group">
-    <label>Сайт</label>
-    <input type="url" id="link1" placeholder="https://example.com">
-  </div>
-  <div class="form-group">
-    <label>Стим</label>
-    <input type="url" id="link2" placeholder="https://steamcommunity.com/id/...">
-  </div>
-  <div class="form-group">
-    <label>ТГ</label>
-    <input type="url" id="link3" placeholder="https://t.me/...">
-  </div>
-  <div class="form-group" style="display:flex; gap:12px;">
-    <div style="flex:1;">
-      <label>Текущие выговоры</label>
-      <input type="number" id="warnings" min="0" value="0">
-    </div>
-    <div style="flex:1;">
-      <label>Макс. выговоров</label>
-      <input type="number" id="maxWarnings" min="1" value="3">
-    </div>
-  </div>
-  <button type="submit">Сохранить</button>
-  <button type="button" id="deleteBtn">Удалить</button>
-</form>
+      <div class="form-group">
+        <label>Роль</label>
+        <select id="roleSelect" required>
+          <option value="Владелец">Владелец</option>
+          <option value="Совладелец">Совладелец</option>
+          <option value="Руководство">Руководство</option>
+          <option value="Гл. Админ">Гл. Админ</option>
+          <option value="Покупной Админ">Покупной Админ</option>
+          <option value="Админ 2лвл">Админ 2лвл</option>
+          <option value="Админ 1лвл">Админ 1лвл</option>
+          <option value="Стажер">Стажер</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Никнейм</label>
+        <input type="text" id="nickname" required>
+      </div>
+      <div class="form-group">
+        <label>Сайт</label>
+        <input type="url" id="link1" placeholder="https://example.com">
+      </div>
+      <div class="form-group">
+        <label>Стим</label>
+        <input type="url" id="link2" placeholder="https://steamcommunity.com/id/...">
+      </div>
+      <div class="form-group">
+        <label>ТГ</label>
+        <input type="url" id="link3" placeholder="https://t.me/...">
+      </div>
+      <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; gap:12px;">
+          <div style="flex:1;">
+            <label>Текущие выговоры</label>
+            <input type="number" id="warnings" min="0" value="0">
+          </div>
+          <div style="flex:1;">
+            <label>Макс. выговоров</label>
+            <input type="number" id="maxWarnings" min="1" value="3">
+          </div>
+        </div>
+        <button type="button" id="toggleWarningsBtn" class="link-btn" style="align-self:flex-start; padding:6px 12px; width:auto;">
+          Отключить выговоры
+        </button>
+      </div>
+      <button type="submit">Сохранить</button>
+      <button type="button" id="deleteBtn">Удалить</button>
+    </form>
   </div>
 </div>
 
@@ -352,6 +353,7 @@
   const deleteBtn = document.getElementById('deleteBtn');
   const warningsFilter = document.getElementById('warningsFilter');
   const offlineBanner = document.getElementById('offlineBanner');
+  const toggleWarningsBtn = document.getElementById('toggleWarningsBtn');
 
   let currentUser = null;
   let editingDocId = null;
@@ -467,7 +469,7 @@
 
     const filteredRoles = allRoles.filter(role => {
       const matchesSearch = role.nickname.toLowerCase().includes(searchTerm);
-      const matchesWarnings = !showOnlyWarnings || (role.warnings > 0);
+      const matchesWarnings = !showOnlyWarnings || (role.warnings > 0 && !(role.warningsDisabled === true));
       return matchesSearch && matchesWarnings;
     });
 
@@ -501,13 +503,14 @@
 
   async function incrementWarnings(docId, delta) {
     const role = allRoles.find(r => r.id === docId);
-    if (!role) return;
+    if (!role || role.warningsDisabled) return;
 
-    const newWarnings = Math.max(0, Math.min(role.maxWarnings || 3, (role.warnings || 0) + delta));
+    const maxWarn = role.maxWarnings || 3;
+    const newWarnings = Math.max(0, Math.min(maxWarn, (role.warnings || 0) + delta));
     try {
       await updateDoc(doc(db, "roles", docId), { warnings: newWarnings });
       role.warnings = newWarnings;
-      renderRoles(); // или обновить только текущую карточку — по желанию
+      renderRoles();
     } catch (err) {
       alert('Ошибка обновления выговоров: ' + err.message);
     }
@@ -515,7 +518,7 @@
 
   function createRoleCard(role, docId) {
     const card = document.createElement('div');
-    card.className = `role-card ${role.warnings > 0 ? 'warning' : ''}`;
+    card.className = `role-card ${role.warnings > 0 && !role.warningsDisabled ? 'warning' : ''}`;
     
     const openLink = (url) => {
       if (url) {
@@ -534,10 +537,14 @@
         ${role.link2 ? `<button type="button" class="link-btn" data-url="${role.link2}">Стим</button>` : ''}
         ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
       </div>
-      <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
-        <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="-1">–</button>
+      <div class="warnings-line">
+        ${currentUser && !role.warningsDisabled ? `
+          <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="-1">–</button>
+        ` : ''}
         <span class="current-warnings">${currentWarn}</span> / <span class="max-warnings">${maxWarn}</span>
-        <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="1">+</button>
+        ${currentUser && !role.warningsDisabled ? `
+          <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="1">+</button>
+        ` : ''}
         ${currentUser ? `
           <button class="link-btn" style="margin-left:auto; padding:4px 8px; font-size:12px;">${role.onLeave ? 'В отпуске' : 'Работает'}</button>
         ` : ''}
@@ -549,14 +556,14 @@
       btn.addEventListener('click', () => openLink(btn.dataset.url));
     });
 
-    card.querySelectorAll('.link-btn[data-delta]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const delta = parseInt(btn.dataset.delta);
-        incrementWarnings(docId, delta);
-      });
-    });
-
     if (currentUser) {
+      card.querySelectorAll('.link-btn[data-delta]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const delta = parseInt(btn.dataset.delta);
+          incrementWarnings(docId, delta);
+        });
+      });
+
       const editBtn = card.querySelector('.edit-btn');
       editBtn.addEventListener('click', () => openEditModal(docId, role));
       
@@ -586,6 +593,8 @@
     modalTitle.textContent = 'Добавить роль';
     roleForm.reset();
     document.getElementById('maxWarnings').value = 3;
+    toggleWarningsBtn.textContent = 'Отключить выговоры';
+    document.getElementById('warnings').disabled = false;
     deleteBtn.style.display = 'none';
     modal.classList.add('active');
   });
@@ -599,10 +608,31 @@
     document.getElementById('link3').value = role.link3 || '';
     document.getElementById('warnings').value = role.warnings || 0;
     document.getElementById('maxWarnings').value = role.maxWarnings || 3;
+    
+    const isDisabled = role.warningsDisabled === true;
+    toggleWarningsBtn.textContent = isDisabled ? 'Включить выговоры' : 'Отключить выговоры';
+    document.getElementById('warnings').disabled = isDisabled;
+
     modalTitle.textContent = 'Редактировать';
     deleteBtn.style.display = 'block';
     modal.classList.add('active');
   }
+
+  toggleWarningsBtn.addEventListener('click', () => {
+    const warningsInput = document.getElementById('warnings');
+    const isNowDisabled = warningsInput.disabled;
+    
+    if (isNowDisabled) {
+      // Включаем
+      warningsInput.disabled = false;
+      toggleWarningsBtn.textContent = 'Отключить выговоры';
+    } else {
+      // Отключаем
+      warningsInput.disabled = true;
+      warningsInput.value = 0;
+      toggleWarningsBtn.textContent = 'Включить выговоры';
+    }
+  });
 
   closeModal.onclick = () => modal.classList.remove('active');
   window.onclick = (e) => {
@@ -646,6 +676,7 @@
       link3,
       warnings: parseInt(document.getElementById('warnings').value) || 0,
       maxWarnings: parseInt(document.getElementById('maxWarnings').value) || 3,
+      warningsDisabled: document.getElementById('warnings').disabled,
       createdAt: editingDocId ? undefined : new Date()
     };
 
@@ -690,6 +721,7 @@
     loadAndRenderRoles();
   }
 
+  // Anti-devtools
   document.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     location.reload();
@@ -733,5 +765,3 @@
 
 </body>
 </html>
-
-
