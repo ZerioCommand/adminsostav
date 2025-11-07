@@ -499,12 +499,13 @@
   function createRoleCard(role, docId) {
   const card = document.createElement('div');
   card.className = `role-card ${role.disabled ? 'disabled' : ''} ${role.warnings > 0 ? 'warning' : ''}`;
-  
+
   const openLink = (url) => {
-    if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
   };
+
+  const vacationText = role.onVacation ? '🟡 В отпуске' : '🟢 Работает';
+  const vacationColor = role.onVacation ? '#f1c40f' : '#2ecc71';
 
   card.innerHTML = `
     <div class="role-title">${role.role}</div>
@@ -515,14 +516,35 @@
       ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
     </div>
     ${role.warnings > 0 ? `<div class="warnings">Выговоров: ${role.warnings}</div>` : ''}
+
+    <div class="vacation-status" 
+         style="position:absolute; bottom:10px; right:10px; background:${vacationColor};
+                color:#0f0f1b; font-weight:bold; border:none; border-radius:8px;
+                padding:6px 10px; cursor:${currentUser ? 'pointer' : 'default'}; font-size:13px;">
+      ${vacationText}
+    </div>
+
     ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
   `;
 
+  // Ссылки
   card.querySelectorAll('.link-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      openLink(btn.dataset.url);
-    });
+    btn.addEventListener('click', () => openLink(btn.dataset.url));
   });
+
+  // Изменение статуса (только для авторизованных)
+  const vacationBtn = card.querySelector('.vacation-status');
+  if (currentUser) {
+    vacationBtn.addEventListener('click', async () => {
+      const newStatus = !role.onVacation;
+      try {
+        await updateDoc(doc(db, "roles", docId), { onVacation: newStatus });
+        await loadAndRenderRoles();
+      } catch (err) {
+        alert('Ошибка изменения статуса: ' + err.message);
+      }
+    });
+  }
 
   if (currentUser) {
     const editBtn = card.querySelector('.edit-btn');
@@ -532,17 +554,6 @@
   return card;
 }
 
-  searchInput.addEventListener('input', renderRoles);
-  warningsFilter.addEventListener('change', renderRoles);
-
-  addBtn.addEventListener('click', () => {
-    editingDocId = null;
-    modalTitle.textContent = 'Добавить роль';
-    roleForm.reset();
-    document.getElementById('disabled').checked = false;
-    deleteBtn.style.display = 'none';
-    modal.classList.add('active');
-  });
 
   function openEditModal(docId, role) {
     editingDocId = docId;
@@ -593,15 +604,17 @@
   const link3 = document.getElementById('link3').value.trim();
 
   const data = {
-    role: document.getElementById('roleSelect').value,
-    nickname: document.getElementById('nickname').value.trim(),
-    link1,
-    link2,
-    link3,
-    warnings: parseInt(document.getElementById('warnings').value) || 0,
-    disabled: document.getElementById('disabled').checked,
-    createdAt: new Date()
-  };
+  role: document.getElementById('roleSelect').value,
+  nickname: document.getElementById('nickname').value.trim(),
+  link1,
+  link2,
+  link3,
+  warnings: parseInt(document.getElementById('warnings').value) || 0,
+  disabled: document.getElementById('disabled').checked,
+  onVacation: role?.onVacation ?? false,
+  createdAt: new Date()
+};
+
 
   try {
     if (editingDocId) {
@@ -689,3 +702,4 @@ setInterval(() => {
 
 </body>
 </html>
+
