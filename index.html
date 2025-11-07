@@ -248,45 +248,48 @@
     <button class="close-modal" id="closeModal">&times;</button>
     <h2 id="modalTitle">Добавить роль</h2>
     <form id="roleForm">
-      <div class="form-group">
-        <label>Роль</label>
-        <select id="roleSelect" required>
-          <option value="Владелец">Владелец</option>
-          <option value="Совладелец">Совладелец</option>
-          <option value="Руководство">Руководство</option>
-          <option value="Гл. Админ">Гл. Админ</option>
-          <option value="Покупной Админ">Покупной Админ</option>
-          <option value="Админ 2лвл">Админ 2лвл</option>
-          <option value="Админ 1лвл">Админ 1лвл</option>
-          <option value="Стажер">Стажер</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Никнейм</label>
-        <input type="text" id="nickname" required>
-      </div>
-      <div class="form-group">
-        <label>Сайт</label>
-        <input type="url" id="link1" placeholder="https://example.com">
-      </div>
-      <div class="form-group">
-        <label>Стим</label>
-        <input type="url" id="link2" placeholder="https://steamcommunity.com/id/...">
-      </div>
-      <div class="form-group">
-        <label>ТГ</label>
-        <input type="url" id="link3" placeholder="https://t.me/...">
-      </div>
-      <div class="form-group">
-        <label>Выговоры</label>
-        <input type="number" id="warnings" min="0" value="0">
-      </div>
-      <div class="form-group">
-        <label><input type="checkbox" id="disabled"> Отключено</label>
-      </div>
-      <button type="submit">Сохранить</button>
-      <button type="button" id="deleteBtn">Удалить</button>
-    </form>
+  <div class="form-group">
+    <label>Роль</label>
+    <select id="roleSelect" required>
+      <option value="Владелец">Владелец</option>
+      <option value="Совладелец">Совладелец</option>
+      <option value="Руководство">Руководство</option>
+      <option value="Гл. Админ">Гл. Админ</option>
+      <option value="Покупной Админ">Покупной Админ</option>
+      <option value="Админ 2лвл">Админ 2лвл</option>
+      <option value="Админ 1лвл">Админ 1лвл</option>
+      <option value="Стажер">Стажер</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Никнейм</label>
+    <input type="text" id="nickname" required>
+  </div>
+  <div class="form-group">
+    <label>Сайт</label>
+    <input type="url" id="link1" placeholder="https://example.com">
+  </div>
+  <div class="form-group">
+    <label>Стим</label>
+    <input type="url" id="link2" placeholder="https://steamcommunity.com/id/...">
+  </div>
+  <div class="form-group">
+    <label>ТГ</label>
+    <input type="url" id="link3" placeholder="https://t.me/...">
+  </div>
+  <div class="form-group" style="display:flex; gap:12px;">
+    <div style="flex:1;">
+      <label>Текущие выговоры</label>
+      <input type="number" id="warnings" min="0" value="0">
+    </div>
+    <div style="flex:1;">
+      <label>Макс. выговоров</label>
+      <input type="number" id="maxWarnings" min="1" value="3">
+    </div>
+  </div>
+  <button type="submit">Сохранить</button>
+  <button type="button" id="deleteBtn">Удалить</button>
+</form>
   </div>
 </div>
 
@@ -496,41 +499,84 @@
     });
   }
 
-  function createRoleCard(role, docId) {
-  const card = document.createElement('div');
-  card.className = `role-card ${role.disabled ? 'disabled' : ''} ${role.warnings > 0 ? 'warning' : ''}`;
-  
-  const openLink = (url) => {
-    if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
+  async function incrementWarnings(docId, delta) {
+    const role = allRoles.find(r => r.id === docId);
+    if (!role) return;
+
+    const newWarnings = Math.max(0, Math.min(role.maxWarnings || 3, (role.warnings || 0) + delta));
+    try {
+      await updateDoc(doc(db, "roles", docId), { warnings: newWarnings });
+      role.warnings = newWarnings;
+      renderRoles(); // или обновить только текущую карточку — по желанию
+    } catch (err) {
+      alert('Ошибка обновления выговоров: ' + err.message);
     }
-  };
-
-  card.innerHTML = `
-    <div class="role-title">${role.role}</div>
-    <div class="nickname">${role.nickname}</div>
-    <div class="links">
-      ${role.link1 ? `<button type="button" class="link-btn" data-url="${role.link1}">Сайт</button>` : ''}
-      ${role.link2 ? `<button type="button" class="link-btn" data-url="${role.link2}">Стим</button>` : ''}
-      ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
-    </div>
-    ${role.warnings > 0 ? `<div class="warnings">Выговоров: ${role.warnings}</div>` : ''}
-    ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
-  `;
-
-  card.querySelectorAll('.link-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      openLink(btn.dataset.url);
-    });
-  });
-
-  if (currentUser) {
-    const editBtn = card.querySelector('.edit-btn');
-    editBtn.addEventListener('click', () => openEditModal(docId, role));
   }
 
-  return card;
-}
+  function createRoleCard(role, docId) {
+    const card = document.createElement('div');
+    card.className = `role-card ${role.warnings > 0 ? 'warning' : ''}`;
+    
+    const openLink = (url) => {
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    };
+
+    const maxWarn = role.maxWarnings || 3;
+    const currentWarn = role.warnings || 0;
+
+    card.innerHTML = `
+      <div class="role-title">${role.role}</div>
+      <div class="nickname">${role.nickname}</div>
+      <div class="links">
+        ${role.link1 ? `<button type="button" class="link-btn" data-url="${role.link1}">Сайт</button>` : ''}
+        ${role.link2 ? `<button type="button" class="link-btn" data-url="${role.link2}">Стим</button>` : ''}
+        ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+        <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="-1">–</button>
+        <span class="current-warnings">${currentWarn}</span> / <span class="max-warnings">${maxWarn}</span>
+        <button class="link-btn" style="padding:4px 6px; font-size:12px;" data-id="${docId}" data-delta="1">+</button>
+        ${currentUser ? `
+          <button class="link-btn" style="margin-left:auto; padding:4px 8px; font-size:12px;">${role.onLeave ? 'В отпуске' : 'Работает'}</button>
+        ` : ''}
+      </div>
+      ${currentUser ? `<button class="edit-btn" data-id="${docId}">✏️</button>` : ''}
+    `;
+
+    card.querySelectorAll('.link-btn[data-url]').forEach(btn => {
+      btn.addEventListener('click', () => openLink(btn.dataset.url));
+    });
+
+    card.querySelectorAll('.link-btn[data-delta]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const delta = parseInt(btn.dataset.delta);
+        incrementWarnings(docId, delta);
+      });
+    });
+
+    if (currentUser) {
+      const editBtn = card.querySelector('.edit-btn');
+      editBtn.addEventListener('click', () => openEditModal(docId, role));
+      
+      const statusBtn = card.querySelector('.link-btn:last-of-type:not([data-url]):not([data-delta])');
+      if (statusBtn) {
+        statusBtn.addEventListener('click', async () => {
+          const newStatus = !role.onLeave;
+          try {
+            await updateDoc(doc(db, "roles", docId), { onLeave: newStatus });
+            role.onLeave = newStatus;
+            renderRoles();
+          } catch (err) {
+            alert('Ошибка изменения статуса: ' + err.message);
+          }
+        });
+      }
+    }
+
+    return card;
+  }
 
   searchInput.addEventListener('input', renderRoles);
   warningsFilter.addEventListener('change', renderRoles);
@@ -539,7 +585,7 @@
     editingDocId = null;
     modalTitle.textContent = 'Добавить роль';
     roleForm.reset();
-    document.getElementById('disabled').checked = false;
+    document.getElementById('maxWarnings').value = 3;
     deleteBtn.style.display = 'none';
     modal.classList.add('active');
   });
@@ -547,12 +593,12 @@
   function openEditModal(docId, role) {
     editingDocId = docId;
     document.getElementById('roleSelect').value = role.role;
-    document.getElementById('nickname').value = role.nickname;
+    document.getElementById('nickname').value = role.nickname || '';
     document.getElementById('link1').value = role.link1 || '';
     document.getElementById('link2').value = role.link2 || '';
     document.getElementById('link3').value = role.link3 || '';
     document.getElementById('warnings').value = role.warnings || 0;
-    document.getElementById('disabled').checked = role.disabled || false;
+    document.getElementById('maxWarnings').value = role.maxWarnings || 3;
     modalTitle.textContent = 'Редактировать';
     deleteBtn.style.display = 'block';
     modal.classList.add('active');
@@ -586,36 +632,36 @@
   };
 
   roleForm.onsubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const link1 = document.getElementById('link1').value.trim();
-  const link2 = document.getElementById('link2').value.trim();
-  const link3 = document.getElementById('link3').value.trim();
+    const link1 = document.getElementById('link1').value.trim();
+    const link2 = document.getElementById('link2').value.trim();
+    const link3 = document.getElementById('link3').value.trim();
 
-  const data = {
-    role: document.getElementById('roleSelect').value,
-    nickname: document.getElementById('nickname').value.trim(),
-    link1,
-    link2,
-    link3,
-    warnings: parseInt(document.getElementById('warnings').value) || 0,
-    disabled: document.getElementById('disabled').checked,
-    createdAt: new Date()
-  };
+    const data = {
+      role: document.getElementById('roleSelect').value,
+      nickname: document.getElementById('nickname').value.trim(),
+      link1,
+      link2,
+      link3,
+      warnings: parseInt(document.getElementById('warnings').value) || 0,
+      maxWarnings: parseInt(document.getElementById('maxWarnings').value) || 3,
+      createdAt: editingDocId ? undefined : new Date()
+    };
 
-  try {
-    if (editingDocId) {
-      await updateDoc(doc(db, "roles", editingDocId), data);
-    } else {
-      await addDoc(collection(db, "roles"), data);
+    try {
+      if (editingDocId) {
+        await updateDoc(doc(db, "roles", editingDocId), data);
+      } else {
+        await addDoc(collection(db, "roles"), data);
+      }
+      modal.classList.remove('active');
+      roleForm.reset();
+      await loadAndRenderRoles();
+    } catch (err) {
+      alert('Ошибка сохранения: ' + err.message);
     }
-    modal.classList.remove('active');
-    roleForm.reset();
-    await loadAndRenderRoles();
-  } catch (err) {
-    alert('Ошибка сохранения: ' + err.message);
-  }
-};
+  };
 
   deleteBtn.onclick = async () => {
     if (!editingDocId) return;
@@ -643,50 +689,49 @@
   if (!isOnline()) {
     loadAndRenderRoles();
   }
-document.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
-  location.reload();
-});
 
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'F12') {
+  document.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     location.reload();
-  }
+  });
 
-  if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
-    e.preventDefault();
-    location.reload();
-  }
-
-  if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
-    e.preventDefault();
-    location.reload();
-  }
-
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
-    e.preventDefault();
-    location.reload();
-  }
-});
-
-let devtools = false;
-const threshold = 160;
-
-setInterval(() => {
-  if (window.outerHeight - window.innerHeight > threshold || 
-      window.outerWidth - window.innerWidth > threshold) {
-    if (!devtools) {
-      devtools = true;
-      window.open(location.href, '_blank');
-      setTimeout(() => location.reload(), 100);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'F12') {
+      e.preventDefault();
+      location.reload();
     }
-  } else {
-    devtools = false;
-  }
-}, 1000);
+    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+      e.preventDefault();
+      location.reload();
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+      e.preventDefault();
+      location.reload();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
+      e.preventDefault();
+      location.reload();
+    }
+  });
+
+  let devtools = false;
+  const threshold = 160;
+
+  setInterval(() => {
+    if (window.outerHeight - window.innerHeight > threshold || 
+        window.outerWidth - window.innerWidth > threshold) {
+      if (!devtools) {
+        devtools = true;
+        window.open(location.href, '_blank');
+        setTimeout(() => location.reload(), 100);
+      }
+    } else {
+      devtools = false;
+    }
+  }, 1000);
 </script>
 
 </body>
 </html>
+
 
