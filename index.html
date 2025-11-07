@@ -669,15 +669,15 @@
     const link3 = document.getElementById('link3').value.trim();
 
     const data = {
-      role: document.getElementById('roleSelect').value,
-      nickname: document.getElementById('nickname').value.trim(),
-      link1,
-      link2,
-      link3,
-      warnings: parseInt(document.getElementById('warnings').value) || 0,
-      maxWarnings: parseInt(document.getElementById('maxWarnings').value) || 3,
-      warningsDisabled: document.getElementById('warnings').disabled,
-      createdAt: editingDocId ? undefined : new Date()
+  role: document.getElementById('roleSelect').value,
+  nickname: document.getElementById('nickname').value.trim(),
+  link1,
+  link2,
+  link3,
+  warnings: parseInt(document.getElementById('warnings').value) || 0,
+  maxWarnings: parseInt(document.getElementById('maxWarnings').value) || 3,
+  warningsDisabled: document.getElementById('warnings').disabled,
+  ...(editingDocId ? {} : { createdAt: new Date() })
     };
 
     try {
@@ -721,7 +721,6 @@
     loadAndRenderRoles();
   }
 
-  // Anti-devtools
   document.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     location.reload();
@@ -765,3 +764,4 @@
 
 </body>
 </html>
+
