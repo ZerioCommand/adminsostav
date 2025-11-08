@@ -5,7 +5,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Состав Админов</title>
   <style>
-/* Стили для уведомлений */
+.rules-btn {
+  width: 40px; 
+  height: 40px; 
+  border-radius: 50%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.rules-btn img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.rules-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+
+.rules-modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.rules-content {
+  background: var(--card-bg);
+  padding: 25px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  border: 2px solid var(--accent);
+}
+
+.rules-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: var(--accent);
+  text-align: center;
+}
+
+.rules-text {
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 25px;
+  color: var(--text);
+}
 .notification-container {
   position: fixed;
   top: 20px;
@@ -470,6 +535,19 @@
   </div>
 </div>
 
+<div class="rules-modal" id="rulesModal">
+  <div class="rules-content">
+    <div class="rules-title">Доп правила для администраторов проекта</div>
+    <div class="rules-text">
+      <p>• За отсутствие в течении недели вы получаете 1 выговор!</p>
+      <p>• За нарушения правил вы получаете 2 варна не включая правила за которые вы получаете бан навсегда!</p>
+      <p>• Хотите уменьшить выговоры и варны наигрывайте больше 7 часов (1ч = 1 варн)</p>
+      <p>• 1 Выговор = 3 Варна</p>
+      <p style="color: var(--accent); font-weight: bold; margin-top: 15px;">Обязательно к ознакомлению!</p>
+    </div>
+  </div>
+</div>
+
 <div class="search-box">
   <input type="text" id="searchInput" placeholder="Поиск по нику...">
 </div>
@@ -617,7 +695,6 @@
   const CACHE_KEY = 'roles_cache';
   const CACHE_EXPIRY = 5 * 60 * 1000;
 
-  // Функция для показа уведомлений
   function showNotification(title, message, type = 'info', duration = 5000) {
     const container = document.getElementById('notificationContainer');
     const notification = document.createElement('div');
@@ -640,17 +717,14 @@
     `;
     
     container.appendChild(notification);
-    
-    // Анимация появления
+
     setTimeout(() => notification.classList.add('show'), 10);
     
-    // Закрытие по кнопке
     const closeBtn = notification.querySelector('.notification-close');
     closeBtn.addEventListener('click', () => {
       closeNotification(notification);
     });
     
-    // Автоматическое закрытие
     if (duration > 0) {
       setTimeout(() => {
         if (notification.parentNode) {
@@ -831,7 +905,6 @@
     const warningsMax = role.warningsMax || 3;
     const warningsBadgeClass = warningsIssued > 0 ? '' : 'no-warnings';
 
-    // Отключенные карточки не показывают выговоры
     const showWarningsBadge = !role.disabled;
 
     card.innerHTML = `
@@ -870,7 +943,7 @@
     const vacationBtn = card.querySelector('.vacation-status');
     if (currentUser) {
       vacationBtn.addEventListener('click', async (e) => {
-        e.stopPropagation(); // Предотвращаем открытие формы редактирования
+        e.stopPropagation();
         const newStatus = !role.onVacation;
         try {
           await updateDoc(doc(db, "roles", docId), { onVacation: newStatus });
@@ -889,7 +962,6 @@
 
     if (currentUser) {
       card.addEventListener('click', (e) => {
-        // Не открываем редактирование при клике на кнопки ссылок или статус отпуска
         if (!e.target.closest('.link-btn') && !e.target.closest('.vacation-status') && !e.target.closest('.warnings-badge')) {
           openEditModal(docId, role);
         }
@@ -910,7 +982,6 @@
     document.getElementById('warningsMax').value = role.warningsMax || 3;
     document.getElementById('disabled').checked = role.disabled || false;
     
-    // При открытии формы редактирования проверяем состояние переключателя
     const warningsIssuedInput = document.getElementById('warningsIssued');
     if (role.disabled) {
       warningsIssuedInput.disabled = true;
@@ -929,9 +1000,10 @@
 
   closeModal.onclick = () => modal.classList.remove('active');
   window.onclick = (e) => {
-    if (e.target === modal) modal.classList.remove('active');
-    if (e.target === loginModal) loginModal.classList.remove('active');
-  };
+  if (e.target === modal) modal.classList.remove('active');
+  if (e.target === loginModal) loginModal.classList.remove('active');
+  if (e.target === rulesModal) rulesModal.classList.remove('active');
+};
 
   authBtn.onclick = () => {
     if (currentUser) {
@@ -961,7 +1033,6 @@
     roleForm.reset();
     document.getElementById('warningsIssued').value = 0;
     document.getElementById('warningsMax').value = 3;
-    // Сбрасываем состояние поля выговоров при добавлении новой роли
     const warningsIssuedInput = document.getElementById('warningsIssued');
     warningsIssuedInput.disabled = false;
     warningsIssuedInput.style.opacity = '1';
@@ -985,7 +1056,6 @@
       link1,
       link2,
       link3,
-      // Если карточка отключена, сбрасываем выговоры до 0
       warningsIssued: isDisabled ? 0 : parseInt(document.getElementById('warningsIssued').value) || 0,
       warningsMax: parseInt(document.getElementById('warningsMax').value) || 3,
       disabled: isDisabled,
@@ -1023,18 +1093,15 @@
     }
   };
 
-  // Обработчик для переключателя "Отключено"
   document.getElementById('disabled').addEventListener('change', function() {
     const warningsIssuedInput = document.getElementById('warningsIssued');
     
     if (this.checked) {
-      // Если включаем "Отключено", сбрасываем выговоры до 0 и делаем поле неактивным
       warningsIssuedInput.value = 0;
       warningsIssuedInput.disabled = true;
       warningsIssuedInput.style.opacity = '0.6';
       warningsIssuedInput.style.cursor = 'not-allowed';
     } else {
-      // Если выключаем "Отключено", возвращаем возможность редактировать выговоры
       warningsIssuedInput.disabled = false;
       warningsIssuedInput.style.opacity = '1';
       warningsIssuedInput.style.cursor = 'text';
@@ -1101,6 +1168,25 @@
       devtools = false;
     }
   }, 1000);
+
+const rulesBtn = document.createElement('div');
+rulesBtn.className = 'rules-btn';
+rulesBtn.id = 'rulesBtn';
+rulesBtn.innerHTML = '<img src="https://i.yapx.ru/cFMZj.png" alt="Правила" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'📋\'">';
+
+authBtn.parentNode.insertBefore(rulesBtn, authBtn);
+
+const rulesModal = document.getElementById('rulesModal');
+
+rulesBtn.onclick = () => {
+  rulesModal.classList.add('active');
+};
+
+window.onclick = (e) => {
+  if (e.target === modal) modal.classList.remove('active');
+  if (e.target === loginModal) loginModal.classList.remove('active');
+  if (e.target === rulesModal) rulesModal.classList.remove('active');
+};
 </script>
 
 </body>
