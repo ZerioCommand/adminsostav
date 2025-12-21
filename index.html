@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Состав Админов</title>
+
   <style>
 :root{
   --bg0:#060b1a;
@@ -46,12 +47,24 @@ body{
 *::-webkit-scrollbar-thumb{ background: rgba(58,169,255,.25); border-radius: 20px; border:2px solid rgba(0,0,0,.15); }
 *::-webkit-scrollbar-track{ background: rgba(0,0,0,.18); border-radius: 20px; }
 
+#snow{
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 90;
+  opacity: .75;
+}
+
 .header{
   display:flex;
   justify-content:flex-end;
   align-items:center;
   padding:10px 0 6px;
   gap:10px;
+  position: relative;
+  z-index: 2;
 }
 
 .avatar,
@@ -87,13 +100,15 @@ body{
   object-fit:cover;
 }
 
-.search-box{ text-align:center; margin:14px 0 10px; }
+.search-box{ text-align:center; margin:14px 0 10px; position: relative; z-index: 2; }
 .filter-box{
   display:flex;
   justify-content:center;
   gap:12px;
   margin: 0 0 14px;
   flex-wrap:wrap;
+  position: relative;
+  z-index: 2;
 }
 
 .search-box input,
@@ -132,7 +147,6 @@ input:focus, select:focus{
   border: 1px solid rgba(58,169,255,.14);
 }
 
-/* nicer checkbox */
 .filter-box input[type="checkbox"]{
   width: 18px;
   height: 18px;
@@ -149,8 +163,40 @@ input:focus, select:focus{
   border-radius: 12px;
   font-size: 14px;
   box-shadow: 0 12px 30px rgba(0,0,0,.35);
-  max-width: 800px;
+  max-width: 860px;
+  position: relative;
+  z-index: 2;
 }
+
+.stats{
+  max-width: 860px;
+  margin: 0 auto 14px;
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+}
+.stat-card{
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(58,169,255,.18);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.25);
+  overflow:hidden;
+  position: relative;
+}
+.stat-card::before{
+  content:"";
+  position:absolute;
+  inset:-1px -1px auto -1px;
+  height: 52px;
+  background: radial-gradient(420px 80px at 30% 0%, rgba(58,169,255,.25), transparent 70%);
+  pointer-events:none;
+}
+.stat-label{ color: var(--muted); font-weight:800; font-size: 13px; position: relative; }
+.stat-value{ font-size: 22px; font-weight: 900; margin-top: 4px; position: relative; }
+@media (max-width: 720px){ .stats{ grid-template-columns: 1fr; } }
 
 .hierarchy{
   display:flex;
@@ -158,12 +204,11 @@ input:focus, select:focus{
   gap:18px;
   max-width: 860px;
   margin: 0 auto;
+  position: relative;
+  z-index: 2;
 }
-
-.role-section{ margin-bottom: 10px; }
 .role-section > div{ display:flex; flex-direction:column; gap:12px; }
 
-/* Section title */
 .section-title{
   font-size: 18px;
   font-weight: 800;
@@ -176,7 +221,42 @@ input:focus, select:focus{
   background:
     linear-gradient(90deg, rgba(58,169,255,.18), rgba(47,225,255,.10));
   box-shadow: 0 14px 34px rgba(0,0,0,.32);
+  position: relative;
+  overflow:hidden;
 }
+.section-title::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(120deg, transparent 40%, rgba(255,255,255,.12) 50%, transparent 60%);
+  transform: translateX(-130%);
+  animation: shimmer 3.8s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes shimmer{
+  0%{ transform: translateX(-130%); }
+  45%{ transform: translateX(130%); }
+  100%{ transform: translateX(130%); }
+}
+
+.role-section{
+  opacity: 0;
+  transform: translateY(10px);
+  animation: sectionIn .55s ease forwards;
+  position: relative;
+  padding-bottom: 14px;
+}
+@keyframes sectionIn{
+  to { opacity: 1; transform: translateY(0); }
+}
+.role-section::after{
+  content:"";
+  display:block;
+  height:1px;
+  margin-top: 16px;
+  background: linear-gradient(90deg, transparent, rgba(58,169,255,.45), transparent);
+}
+.role-section:last-child::after{ display:none; }
 
 .role-card{
   position: relative;
@@ -186,6 +266,10 @@ input:focus, select:focus{
   border: 1px solid rgba(58,169,255,.18);
   box-shadow: var(--shadow);
   overflow:hidden;
+
+  --role-accent: var(--accent);
+  --role-glow: rgba(58,169,255,.22);
+  --warn-pct: 0%;
 
   opacity: 0;
   transform: translateY(10px);
@@ -203,6 +287,24 @@ input:focus, select:focus{
   pointer-events:none;
 }
 
+.role-card::after{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,.12),
+    var(--role-glow),
+    rgba(255,255,255,.08)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events:none;
+  opacity: .65;
+}
+
 @supports(backdrop-filter: blur(12px)){
   .role-card, .modal-content, .rules-content, .notification{
     backdrop-filter: blur(14px);
@@ -213,7 +315,10 @@ input:focus, select:focus{
 .role-card.editable:hover{
   transform: translateY(-3px);
   border-color: rgba(58,169,255,.42);
-  box-shadow: 0 18px 55px rgba(0,0,0,.55);
+  box-shadow:
+    0 18px 55px rgba(0,0,0,.55),
+    0 0 0 1px rgba(58,169,255,.25),
+    0 0 28px 6px var(--role-glow);
   background: rgba(18,35,74,.72);
 }
 .role-card.disabled{
@@ -222,13 +327,12 @@ input:focus, select:focus{
 }
 .role-card.warning{
   border-color: rgba(255,204,77,.35);
-  box-shadow: 0 18px 55px rgba(0,0,0,.55);
 }
 
 .role-title{
   font-size: 14px;
   font-weight: 800;
-  color: rgba(47,225,255,.95);
+  color: var(--role-accent);
   letter-spacing: .3px;
   margin-bottom: 6px;
   text-transform: uppercase;
@@ -280,20 +384,44 @@ input:focus, select:focus{
   position:absolute;
   top: 12px;
   right: 12px;
-  padding: 8px 10px;
+  padding: 10px 10px;
   border-radius: 12px;
   font-size: 13px;
   font-weight: 900;
   display:flex;
-  align-items:center;
-  gap:6px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
   color: #08142e;
   background: linear-gradient(90deg, rgba(255,61,141,.95), rgba(255,122,193,.85));
   border: 1px solid rgba(255,255,255,.22);
   box-shadow: 0 16px 38px rgba(0,0,0,.45);
+  min-width: 112px;
 }
 .warnings-badge.no-warnings{
   background: linear-gradient(90deg, rgba(40,224,143,.95), rgba(58,169,255,.65));
+}
+
+.warnings-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 8px;
+  font-weight: 900;
+}
+.warnings-bar{
+  height: 6px;
+  border-radius: 999px;
+  overflow:hidden;
+  background: rgba(8,20,46,.28);
+  border: 1px solid rgba(255,255,255,.18);
+}
+.warnings-bar > span{
+  display:block;
+  height:100%;
+  width: var(--warn-pct);
+  background: rgba(255,255,255,.78);
+  border-radius: 999px;
 }
 
 .edit-overlay{
@@ -603,739 +731,835 @@ button:active{ transform: translateY(-1px) scale(.99); }
   .modal-content, .rules-content{ padding: 18px; width: 95%; }
   .nickname{ font-size: 20px; }
 }
-#snow{
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 999;
-  opacity: 0.75;
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation: none !important; transition: none !important; }
+  #snow{ display:none; }
+  .section-title::before{ display:none; }
 }
-
-</style>
-
+  </style>
 </head>
+
 <body>
-<canvas id="snow"></canvas>
 
-<div class="header">
-<div class="notification-container" id="notificationContainer"></div>
-  <div class="avatar" id="authBtn">
-    <img src="https://i.postimg.cc/bw6qvcFL/Bez-imeni-2.png" alt="Аватар" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'">
-  </div>
-</div>
+  <canvas id="snow"></canvas>
 
-<div class="rules-modal" id="rulesModal">
-  <div class="rules-content">
-    <div class="rules-title">Доп правила для администраторов проекта</div>
-    <div class="rules-text">
-      <p>• За отсутствие в течении недели вы получаете 1 выговор!</p>
-      <p>• За нарушения правил вы получаете 2 варна не включая правила за которые вы получаете бан навсегда!</p>
-      <p>• Хотите уменьшить выговоры и варны наигрывайте больше 7 часов (1ч = 1 варн)</p>
-      <p>• 1 Выговор = 3 Варна</p>
-      <p style="color: var(--accent); font-weight: bold; margin-top: 15px;">Обязательно к ознакомлению!</p>
+  <div class="header">
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <div class="rules-btn" id="rulesBtn" title="Правила">
+      <img src="https://i.yapx.ru/cFMZj.png" alt="Правила" onerror="this.style.display='none'; this.parentElement.innerHTML='📋'">
+    </div>
+
+    <div class="avatar" id="authBtn" title="Авторизация">
+      <img src="https://i.postimg.cc/bw6qvcFL/Bez-imeni-2.png" alt="Аватар" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'">
     </div>
   </div>
-</div>
 
-<div class="search-box">
-  <input type="text" id="searchInput" placeholder="Поиск по нику...">
-</div>
-
-<div class="filter-box">
-  <label><input type="checkbox" id="warningsFilter"> Только с выговорами</label>
-</div>
-
-<div id="offlineBanner" class="offline-banner" style="display:none;">
-  ⚠️ Нет подключения к интернету. Показаны кэшированные данные.
-</div>
-
-<div class="hierarchy" id="hierarchyContainer">
-  <div style="text-align:center; padding:20px;"><div class="spinner"></div></div>
-</div>
-
-<div class="add-btn" id="addBtn"></div>
-
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <button class="close-modal" id="closeModal">&times;</button>
-    <h2 id="modalTitle">Добавить роль</h2>
-    <form id="roleForm">
-      <div class="form-group">
-        <label>Роль</label>
-        <select id="roleSelect" required>
-          <option value="Владелец">Владелец</option>
-          <option value="Совладелец">Совладелец</option>
-          <option value="Руководство">Руководство</option>
-          <option value="Гл. Админ">Гл. Админ</option>
-          <option value="Зам.Га">Зам.Га</option>
-          <option value="Покупной Админ">Покупной Админ</option>
-          <option value="Админ 2лвл">Админ 2лвл</option>
-          <option value="Админ 1лвл">Админ 1лвл</option>
-          <option value="Стажер">Стажер</option>
-        </select>
+  <div class="rules-modal" id="rulesModal">
+    <div class="rules-content">
+      <div class="rules-title">Доп правила для администраторов проекта</div>
+      <div class="rules-text">
+        <p>• За отсутствие в течении недели вы получаете 1 выговор!</p>
+        <p>• За нарушения правил вы получаете 2 варна не включая правила за которые вы получаете бан навсегда!</p>
+        <p>• Хотите уменьшить выговоры и варны наигрывайте больше 7 часов (1ч = 1 варн)</p>
+        <p>• 1 Выговор = 3 Варна</p>
+        <p style="color: var(--accent); font-weight: 900; margin-top: 12px;">Обязательно к ознакомлению!</p>
       </div>
-      <div class="form-group">
-        <label>Никнейм</label>
-        <input type="text" id="nickname" required>
-      </div>
-      <div class="form-group">
-        <label>Сайт</label>
-        <input type="url" id="link1" placeholder="https://example.com">
-      </div>
-      <div class="form-group">
-        <label>Стим</label>
-        <input type="url" id="link2" placeholder="https://steamcommunity.com/id/...">
-      </div>
-      <div class="form-group">
-        <label>ТГ</label>
-        <input type="url" id="link3" placeholder="https://t.me/...">
-      </div>
-      
-      <div class="warnings-group">
+    </div>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Поиск по нику...">
+  </div>
+
+  <div class="filter-box">
+    <label><input type="checkbox" id="warningsFilter"> Только с выговорами</label>
+  </div>
+
+  <div id="offlineBanner" class="offline-banner" style="display:none;">
+    ⚠️ Нет подключения к интернету. Показаны кэшированные данные.
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="hierarchy" id="hierarchyContainer">
+    <div style="text-align:center; padding:20px;"><div class="spinner"></div></div>
+  </div>
+
+  <div class="add-btn" id="addBtn"></div>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <button class="close-modal" id="closeModal">&times;</button>
+      <h2 id="modalTitle">Добавить роль</h2>
+      <form id="roleForm">
         <div class="form-group">
-          <label>Выдано выговоров</label>
-          <input type="number" id="warningsIssued" min="0" max="999" value="0">
+          <label>Роль</label>
+          <select id="roleSelect" required>
+            <option value="Владелец">Владелец</option>
+            <option value="Совладелец">Совладелец</option>
+            <option value="Руководство">Руководство</option>
+            <option value="Гл. Админ">Гл. Админ</option>
+            <option value="Зам.Га">Зам.Га</option>
+            <option value="Покупной Админ">Покупной Админ</option>
+            <option value="Админ 2лвл">Админ 2лвл</option>
+            <option value="Админ 1лвл">Админ 1лвл</option>
+            <option value="Стажер">Стажер</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Никнейм</label>
+          <input type="text" id="nickname" required>
+        </div>
+
+        <div class="form-group">
+          <label>Сайт</label>
+          <input type="url" id="link1" placeholder="https://example.com">
+        </div>
+
+        <div class="form-group">
+          <label>Стим</label>
+          <input type="url" id="link2" placeholder="https://steamcommunity.com/id/...">
+        </div>
+
+        <div class="form-group">
+          <label>ТГ</label>
+          <input type="url" id="link3" placeholder="https://t.me/...">
+        </div>
+
+        <div class="warnings-group">
+          <div class="form-group">
+            <label>Выдано выговоров</label>
+            <input type="number" id="warningsIssued" min="0" max="999" value="0">
+          </div>
+          <div class="form-group">
+            <label>Макс. выговоров</label>
+            <input type="number" id="warningsMax" min="1" max="999" value="3">
+          </div>
+        </div>
+
+        <div class="toggle-group">
+          <span class="toggle-label">Отключено</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="disabled">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <button type="submit">Сохранить</button>
+        <button type="button" id="deleteBtn">Удалить</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="loginModal">
+    <div class="modal-content">
+      <h2>Авторизация</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" required>
         </div>
         <div class="form-group">
-          <label>Макс. выговоров</label>
-          <input type="number" id="warningsMax" min="1" max="999" value="3">
+          <label>Пароль</label>
+          <input type="password" id="loginPassword" required>
         </div>
-      </div>
-      
-      <div class="toggle-group">
-        <span class="toggle-label">Отключено</span>
-        <label class="toggle-switch">
-          <input type="checkbox" id="disabled">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      
-      <button type="submit">Сохранить</button>
-      <button type="button" id="deleteBtn">Удалить</button>
-    </form>
+        <button type="submit">Войти</button>
+      </form>
+    </div>
   </div>
-</div>
 
-<div class="modal" id="loginModal">
-  <div class="modal-content">
-    <h2>Авторизация</h2>
-    <form id="loginForm">
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="loginEmail" required>
-      </div>
-      <div class="form-group">
-        <label>Пароль</label>
-        <input type="password" id="loginPassword" required>
-      </div>
-      <button type="submit">Войти</button>
-    </form>
-  </div>
-</div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCdVnWilNkGMkf7BQZmGLuVpEqUTPLjIj0",
-    authDomain: "adminsostav.firebaseapp.com",
-    projectId: "adminsostav",
-    storageBucket: "adminsostav.firebasestorage.app",
-    messagingSenderId: "403848315485",
-    appId: "1:403848315485:web:16a857b3972ee8b6b503b4"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  const ROLE_PRIORITY = {
-    "Владелец": 1,
-    "Совладелец": 2,
-    "Руководство": 3,
-    "Гл. Админ": 4,
-    "Зам.Га": 5,
-    "Покупной Админ": 6,
-    "Админ 2лвл": 7,
-    "Админ 1лвл": 8,
-    "Стажер": 9
-  };
-
-  const hierarchyContainer = document.getElementById('hierarchyContainer');
-  const addBtn = document.getElementById('addBtn');
-  const authBtn = document.getElementById('authBtn');
-  const modal = document.getElementById('modal');
-  const loginModal = document.getElementById('loginModal');
-  const closeModal = document.getElementById('closeModal');
-  const roleForm = document.getElementById('roleForm');
-  const loginForm = document.getElementById('loginForm');
-  const modalTitle = document.getElementById('modalTitle');
-  const searchInput = document.getElementById('searchInput');
-  const deleteBtn = document.getElementById('deleteBtn');
-  const warningsFilter = document.getElementById('warningsFilter');
-  const offlineBanner = document.getElementById('offlineBanner');
-
-  let currentUser = null;
-  let editingDocId = null;
-  let allRoles = [];
-
-  const CACHE_KEY = 'roles_cache';
-  const CACHE_EXPIRY = 5 * 60 * 1000;
-
-  function showNotification(title, message, type = 'info', duration = 5000) {
-    const container = document.getElementById('notificationContainer');
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    
-    const icons = {
-      success: '✅',
-      error: '❌',
-      warning: '⚠️',
-      info: 'ℹ️'
+    const firebaseConfig = {
+      apiKey: "AIzaSyCdVnWilNkGMkf7BQZmGLuVpEqUTPLjIj0",
+      authDomain: "adminsostav.firebaseapp.com",
+      projectId: "adminsostav",
+      storageBucket: "adminsostav.firebasestorage.app",
+      messagingSenderId: "403848315485",
+      appId: "1:403848315485:web:16a857b3972ee8b6b503b4"
     };
-    
-    notification.innerHTML = `
-      <div class="notification-icon">${icons[type]}</div>
-      <div class="notification-content">
-        <div class="notification-title">${title}</div>
-        <div class="notification-message">${message}</div>
-      </div>
-      <button class="notification-close">&times;</button>
-    `;
-    
-    container.appendChild(notification);
 
-    setTimeout(() => notification.classList.add('show'), 10);
-    
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.addEventListener('click', () => {
-      closeNotification(notification);
-    });
-    
-    if (duration > 0) {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const ROLE_PRIORITY = {
+      "Владелец": 1,
+      "Совладелец": 2,
+      "Руководство": 3,
+      "Гл. Админ": 4,
+      "Зам.Га": 5,
+      "Покупной Админ": 6,
+      "Админ 2лвл": 7,
+      "Админ 1лвл": 8,
+      "Стажер": 9
+    };
+
+    const ROLE_STYLES = {
+      "Владелец":       { accent: "#7bbcff", glow: "rgba(123,188,255,.30)" },
+      "Совладелец":     { accent: "#3aa9ff", glow: "rgba(58,169,255,.30)" },
+      "Руководство":    { accent: "#2fe1ff", glow: "rgba(47,225,255,.28)" },
+      "Гл. Админ":      { accent: "#4cc9f0", glow: "rgba(76,201,240,.28)" },
+      "Зам.Га":         { accent: "#2ad0ff", glow: "rgba(42,208,255,.26)" },
+      "Покупной Админ": { accent: "#66f0ff", glow: "rgba(102,240,255,.22)" },
+      "Админ 2лвл":     { accent: "#60b8ff", glow: "rgba(96,184,255,.22)" },
+      "Админ 1лвл":     { accent: "#9fd2ff", glow: "rgba(159,210,255,.18)" },
+      "Стажер":         { accent: "#bfe7ff", glow: "rgba(191,231,255,.16)" }
+    };
+
+    const hierarchyContainer = document.getElementById('hierarchyContainer');
+    const addBtn = document.getElementById('addBtn');
+    const authBtn = document.getElementById('authBtn');
+    const rulesBtn = document.getElementById('rulesBtn');
+
+    const modal = document.getElementById('modal');
+    const loginModal = document.getElementById('loginModal');
+    const rulesModal = document.getElementById('rulesModal');
+
+    const closeModal = document.getElementById('closeModal');
+    const roleForm = document.getElementById('roleForm');
+    const loginForm = document.getElementById('loginForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const searchInput = document.getElementById('searchInput');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const warningsFilter = document.getElementById('warningsFilter');
+    const offlineBanner = document.getElementById('offlineBanner');
+
+    let currentUser = null;
+    let editingDocId = null;
+    let allRoles = [];
+
+    const CACHE_KEY = 'roles_cache';
+    const CACHE_EXPIRY = 5 * 60 * 1000;
+
+    function showNotification(title, message, type = 'info', duration = 5000) {
+      const container = document.getElementById('notificationContainer');
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+
+      const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+
+      notification.innerHTML = `
+        <div class="notification-icon">${icons[type]}</div>
+        <div class="notification-content">
+          <div class="notification-title">${title}</div>
+          <div class="notification-message">${message}</div>
+        </div>
+        <button class="notification-close">&times;</button>
+      `;
+
+      container.appendChild(notification);
+      setTimeout(() => notification.classList.add('show'), 10);
+
+      const closeBtn = notification.querySelector('.notification-close');
+      closeBtn.addEventListener('click', () => closeNotification(notification));
+
+      if (duration > 0) {
+        setTimeout(() => {
+          if (notification.parentNode) closeNotification(notification);
+        }, duration);
+      }
+
+      return notification;
+    }
+
+    function closeNotification(notification) {
+      notification.classList.remove('show');
+      notification.classList.add('hide');
       setTimeout(() => {
-        if (notification.parentNode) {
-          closeNotification(notification);
-        }
-      }, duration);
+        if (notification.parentNode) notification.parentNode.removeChild(notification);
+      }, 400);
     }
-    
-    return notification;
-  }
 
-  function closeNotification(notification) {
-    notification.classList.remove('show');
-    notification.classList.add('hide');
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
+    function showOfflineBanner(show = true) {
+      offlineBanner.style.display = show ? 'block' : 'none';
+    }
+
+    function isOnline() {
+      return navigator.onLine;
+    }
+
+    function getCachedData() {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp > CACHE_EXPIRY) {
+        localStorage.removeItem(CACHE_KEY);
+        return null;
       }
-    }, 400);
-  }
-
-  function showOfflineBanner(show = true) {
-    offlineBanner.style.display = show ? 'block' : 'none';
-  }
-
-  function isOnline() {
-    return navigator.onLine;
-  }
-
-  function getCachedData() {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (!cached) return null;
-    const { data, timestamp } = JSON.parse(cached);
-    if (Date.now() - timestamp > CACHE_EXPIRY) {
-      localStorage.removeItem(CACHE_KEY);
-      return null;
+      return data;
     }
-    return data;
-  }
 
-  function setCachedData(data) {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
-  }
-
-  function validateURL(value, type) {
-    if (!value) return true;
-    try {
-      const url = new URL(value);
-      if (type === 'steam') {
-        return url.hostname === 'steamcommunity.com' && url.pathname.startsWith('/id/');
-      } else if (type === 'tg') {
-        return url.hostname === 't.me' || (url.hostname === 'telegram.me');
-      } else {
-        return url.protocol === 'https:';
-      }
-    } catch {
-      return false;
+    function setCachedData(data) {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
     }
-  }
 
-  async function loadAndRenderRoles(useCache = true) {
-    let data = null;
-    let fromCache = false;
+    async function loadAndRenderRoles(useCache = true) {
+      let data = null;
+      let fromCache = false;
 
-    if (isOnline()) {
-      try {
-        const q = query(collection(db, "roles"), orderBy("createdAt", "asc"));
-        const querySnapshot = await getDocs(q);
-        data = [];
-        querySnapshot.forEach((doc) => {
-          data.push({ id: doc.id, ...doc.data() });
-        });
-        setCachedData(data);
-        showOfflineBanner(false);
-      } catch (err) {
-        console.error("Ошибка загрузки из Firebase:", err);
-        showNotification('Ошибка загрузки', 'Не удалось загрузить данные из сервера', 'error', 5000);
-        if (useCache) {
-          data = getCachedData();
-          fromCache = !!data;
-          if (fromCache) {
-            showOfflineBanner(true);
-            showNotification('Используется кэш', 'Данные загружены из кэша', 'warning', 4000);
-          } else {
-            hierarchyContainer.innerHTML = '<p style="color: #f72585; text-align: center;">Ошибка загрузки данных</p>';
-            return;
+      if (isOnline()) {
+        try {
+          const q = query(collection(db, "roles"), orderBy("createdAt", "asc"));
+          const querySnapshot = await getDocs(q);
+          data = [];
+          querySnapshot.forEach((d) => data.push({ id: d.id, ...d.data() }));
+          setCachedData(data);
+          showOfflineBanner(false);
+        } catch (err) {
+          console.error("Ошибка загрузки из Firebase:", err);
+          showNotification('Ошибка загрузки', 'Не удалось загрузить данные из сервера', 'error', 5000);
+
+          if (useCache) {
+            data = getCachedData();
+            fromCache = !!data;
+            if (fromCache) {
+              showOfflineBanner(true);
+              showNotification('Используется кэш', 'Данные загружены из кэша', 'warning', 4000);
+            } else {
+              hierarchyContainer.innerHTML = '<p style="color:#ff3d8d; text-align:center;">Ошибка загрузки данных</p>';
+              return;
+            }
           }
         }
-      }
-    } else {
-      data = getCachedData();
-      fromCache = !!data;
-      if (fromCache) {
-        showOfflineBanner(true);
-        showNotification('Офлайн режим', 'Данные загружены из кэша', 'info', 4000);
       } else {
-        hierarchyContainer.innerHTML = '<p style="color: #f72585; text-align: center;">Нет подключения к интернету и нет кэша</p>';
-        showNotification('Нет данных', 'Нет подключения к интернету и кэшированных данных', 'error', 5000);
+        data = getCachedData();
+        fromCache = !!data;
+        if (fromCache) {
+          showOfflineBanner(true);
+          showNotification('Офлайн режим', 'Данные загружены из кэша', 'info', 4000);
+        } else {
+          hierarchyContainer.innerHTML = '<p style="color:#ff3d8d; text-align:center;">Нет подключения к интернету и нет кэша</p>';
+          showNotification('Нет данных', 'Нет подключения к интернету и кэшированных данных', 'error', 5000);
+          return;
+        }
+      }
+
+      if (data) {
+        allRoles = data;
+        renderRoles();
+      }
+    }
+
+    function sortRoles(roles) {
+      return roles.sort((a, b) => {
+        const prioA = ROLE_PRIORITY[a.role] ?? 99;
+        const prioB = ROLE_PRIORITY[b.role] ?? 99;
+        if (prioA !== prioB) return prioA - prioB;
+        return a.nickname.localeCompare(b.nickname, 'ru');
+      });
+    }
+
+    function groupRolesByRole(roles) {
+      const groups = {};
+      for (const r of roles) {
+        if (!groups[r.role]) groups[r.role] = [];
+        groups[r.role].push(r);
+      }
+      return groups;
+    }
+
+    function renderStats(roles) {
+      const statsEl = document.getElementById('stats');
+      if (!statsEl) return;
+
+      const total = roles.length;
+      const vacation = roles.filter(r => r.onVacation).length;
+      const warned = roles.filter(r => (r.warningsIssued || 0) > 0 && !r.disabled).length;
+
+      statsEl.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-label">Всего (по фильтру)</div>
+          <div class="stat-value">${total}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">В отпуске</div>
+          <div class="stat-value">${vacation}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">С выговорами</div>
+          <div class="stat-value">${warned}</div>
+        </div>
+      `;
+    }
+
+    function renderRoles() {
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      const showOnlyWarnings = warningsFilter.checked;
+
+      const filteredRoles = allRoles.filter(role => {
+        const warningsIssued = role.warningsIssued || 0;
+        const matchesSearch = role.nickname.toLowerCase().includes(searchTerm);
+        const matchesWarnings = !showOnlyWarnings || (warningsIssued > 0);
+        return matchesSearch && matchesWarnings;
+      });
+
+      renderStats(filteredRoles);
+
+      const sortedRoles = sortRoles([...filteredRoles]);
+      const groups = groupRolesByRole(sortedRoles);
+
+      hierarchyContainer.innerHTML = '';
+
+      if (Object.keys(groups).length === 0) {
+        hierarchyContainer.innerHTML = '<p style="text-align:center;">Ничего не найдено.</p>';
         return;
       }
+
+      const orderedGroups = Object.keys(groups).sort((a, b) => {
+        return (ROLE_PRIORITY[a] ?? 99) - (ROLE_PRIORITY[b] ?? 99);
+      });
+
+      let sectionIndex = 0;
+
+      orderedGroups.forEach(roleName => {
+        const section = document.createElement('div');
+        section.className = 'role-section';
+        section.style.animationDelay = `${sectionIndex * 0.06}s`;
+        sectionIndex++;
+
+        section.innerHTML = `<div class="section-title">${roleName}</div>`;
+        const container = document.createElement('div');
+
+        groups[roleName].forEach((role, idx) => {
+          const card = createRoleCard(role, role.id, idx);
+          container.appendChild(card);
+        });
+
+        section.appendChild(container);
+        hierarchyContainer.appendChild(section);
+      });
     }
 
-    if (data) {
-      allRoles = data;
-      renderRoles();
-    }
-  }
-
-  function sortRoles(roles) {
-    return roles.sort((a, b) => {
-      const prioA = ROLE_PRIORITY[a.role] ?? 99;
-      const prioB = ROLE_PRIORITY[b.role] ?? 99;
-      if (prioA !== prioB) return prioA - prioB;
-      return a.nickname.localeCompare(b.nickname, 'ru');
-    });
-  }
-
-  function groupRolesByRole(roles) {
-    const groups = {};
-    for (const role of roles) {
-      if (!groups[role.role]) groups[role.role] = [];
-      groups[role.role].push(role);
-    }
-    return groups;
-  }
-
-  function renderRoles() {
-    const searchTerm = searchInput.value.toLowerCase().trim();
-    const showOnlyWarnings = warningsFilter.checked;
-
-    const filteredRoles = allRoles.filter(role => {
+    function createRoleCard(role, docId, idx = 0) {
       const warningsIssued = role.warningsIssued || 0;
-      const matchesSearch = role.nickname.toLowerCase().includes(searchTerm);
-      const matchesWarnings = !showOnlyWarnings || (warningsIssued > 0);
-      return matchesSearch && matchesWarnings;
-    });
+      const warningsMax = role.warningsMax || 3;
 
-    const sortedRoles = sortRoles([...filteredRoles]);
-    const groups = groupRolesByRole(sortedRoles);
+      const card = document.createElement('div');
+      card.className = `role-card ${role.disabled ? 'disabled' : ''} ${(warningsIssued > 0) ? 'warning' : ''} ${currentUser ? 'editable' : ''}`;
 
-    hierarchyContainer.innerHTML = '';
+      card.style.animationDelay = `${Math.min(idx, 12) * 0.05}s`;
 
-    if (Object.keys(groups).length === 0) {
-      hierarchyContainer.innerHTML = '<p style="text-align:center;">Ничего не найдено.</p>';
-      return;
-    }
+      const st = ROLE_STYLES[role.role] || { accent: 'var(--accent)', glow: 'rgba(58,169,255,.22)' };
+      card.style.setProperty('--role-accent', st.accent);
+      card.style.setProperty('--role-glow', st.glow);
 
-    const orderedGroups = Object.keys(groups).sort((a, b) => {
-      return (ROLE_PRIORITY[a] ?? 99) - (ROLE_PRIORITY[b] ?? 99);
-    });
+      const pct = warningsMax > 0 ? Math.min(100, Math.round((warningsIssued / warningsMax) * 100)) : 0;
+      card.style.setProperty('--warn-pct', pct + '%');
 
-    orderedGroups.forEach(roleName => {
-      const section = document.createElement('div');
-      section.className = 'role-section';
-      section.innerHTML = `<div class="section-title">${roleName}</div>`;
-      const container = document.createElement('div');
-      groups[roleName].forEach(role => {
-        const card = createRoleCard(role, role.id);
-        container.appendChild(card);
-      });
-      section.appendChild(container);
-      hierarchyContainer.appendChild(section);
-    });
-  }
+      const openLink = (url) => { if (url) window.open(url, '_blank', 'noopener,noreferrer'); };
 
-  function createRoleCard(role, docId) {
-    const card = document.createElement('div');
-    card.className = `role-card ${role.disabled ? 'disabled' : ''} ${(role.warningsIssued || 0) > 0 ? 'warning' : ''} ${currentUser ? 'editable' : ''}`;
+      const vacationText = role.onVacation ? '🟡 В отпуске' : '🟢 Работает';
+      const vacationColor = role.onVacation ? '#ffcc4d' : '#28e08f';
 
-    const openLink = (url) => {
-      if (url) window.open(url, '_blank', 'noopener,noreferrer');
-    };
+      const warningsBadgeClass = warningsIssued > 0 ? '' : 'no-warnings';
+      const showWarningsBadge = !role.disabled;
 
-    const vacationText = role.onVacation ? '🟡 В отпуске' : '🟢 Работает';
-    const vacationColor = role.onVacation ? '#f1c40f' : '#2ecc71';
-    
-    const warningsIssued = role.warningsIssued || 0;
-    const warningsMax = role.warningsMax || 3;
-    const warningsBadgeClass = warningsIssued > 0 ? '' : 'no-warnings';
+      card.innerHTML = `
+        ${showWarningsBadge ? `
+          <div class="warnings-badge ${warningsBadgeClass}">
+            <div class="warnings-meta">
+              <span>⚠️</span>
+              <span>${warningsIssued}/${warningsMax}</span>
+            </div>
+            <div class="warnings-bar"><span></span></div>
+          </div>
+        ` : ''}
 
-    const showWarningsBadge = !role.disabled;
+        <div class="role-title">${role.role}</div>
+        <div class="nickname">${role.nickname}</div>
 
-    card.innerHTML = `
-      ${showWarningsBadge ? `
-      <div class="warnings-badge ${warningsBadgeClass}">
-        ⚠️ ${warningsIssued}/${warningsMax}
-      </div>
-      ` : ''}
-      
-      <div class="role-title">${role.role}</div>
-      <div class="nickname">${role.nickname}</div>
-      <div class="links">
-        ${role.link1 ? `<button type="button" class="link-btn" data-url="${role.link1}">Сайт</button>` : ''}
-        ${role.link2 ? `<button type="button" class="link-btn" data-url="${role.link2}">Стим</button>` : ''}
-        ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
-      </div>
-
-      <div class="vacation-status" 
-           style="position:absolute; bottom:10px; right:10px; background:${vacationColor};
-                  color:#0f0f1b; font-weight:bold; border:none; border-radius:8px;
-                  padding:6px 10px; cursor:${currentUser ? 'pointer' : 'default'}; font-size:13px;">
-        ${vacationText}
-      </div>
-
-      ${currentUser ? `
-        <div class="edit-overlay">
-          <div class="edit-text">Редактировать</div>
+        <div class="links">
+          ${role.link1 ? `<button type="button" class="link-btn" data-url="${role.link1}">Сайт</button>` : ''}
+          ${role.link2 ? `<button type="button" class="link-btn" data-url="${role.link2}">Стим</button>` : ''}
+          ${role.link3 ? `<button type="button" class="link-btn" data-url="${role.link3}">ТГ</button>` : ''}
         </div>
-      ` : ''}
-    `;
 
-    card.querySelectorAll('.link-btn').forEach(btn => {
-      btn.addEventListener('click', () => openLink(btn.dataset.url));
+        <div class="vacation-status"
+             style="position:absolute; bottom:10px; right:10px; background:${vacationColor};
+                    color:#0b1230; font-weight:900; border:none; border-radius:12px;
+                    padding:6px 10px; cursor:${currentUser ? 'pointer' : 'default'}; font-size:13px;">
+          ${vacationText}
+        </div>
+
+        ${currentUser ? `
+          <div class="edit-overlay">
+            <div class="edit-text">Редактировать</div>
+          </div>
+        ` : ''}
+      `;
+
+      card.querySelectorAll('.link-btn').forEach(btn => {
+        btn.addEventListener('click', () => openLink(btn.dataset.url));
+      });
+
+      const vacationBtn = card.querySelector('.vacation-status');
+      if (currentUser) {
+        vacationBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const newStatus = !role.onVacation;
+          try {
+            await updateDoc(doc(db, "roles", docId), { onVacation: newStatus });
+            await loadAndRenderRoles();
+            showNotification('Статус обновлен', `${role.nickname} ${newStatus ? 'в отпуске' : 'работает'}`, 'success', 3000);
+          } catch (err) {
+            showNotification('Ошибка', 'Не удалось изменить статус отпуска: ' + err.message, 'error', 5000);
+          }
+        });
+      }
+
+      if (currentUser) {
+        card.addEventListener('click', (e) => {
+          if (!e.target.closest('.link-btn') && !e.target.closest('.vacation-status') && !e.target.closest('.warnings-badge')) {
+            openEditModal(docId, role);
+          }
+        });
+      }
+
+      return card;
+    }
+
+    function openEditModal(docId, role) {
+      editingDocId = docId;
+      document.getElementById('roleSelect').value = role.role;
+      document.getElementById('nickname').value = role.nickname;
+      document.getElementById('link1').value = role.link1 || '';
+      document.getElementById('link2').value = role.link2 || '';
+      document.getElementById('link3').value = role.link3 || '';
+      document.getElementById('warningsIssued').value = role.warningsIssued || 0;
+      document.getElementById('warningsMax').value = role.warningsMax || 3;
+      document.getElementById('disabled').checked = role.disabled || false;
+
+      const warningsIssuedInput = document.getElementById('warningsIssued');
+      if (role.disabled) {
+        warningsIssuedInput.disabled = true;
+        warningsIssuedInput.style.opacity = '0.6';
+        warningsIssuedInput.style.cursor = 'not-allowed';
+      } else {
+        warningsIssuedInput.disabled = false;
+        warningsIssuedInput.style.opacity = '1';
+        warningsIssuedInput.style.cursor = 'text';
+      }
+
+      modalTitle.textContent = 'Редактировать';
+      deleteBtn.style.display = 'block';
+      modal.classList.add('active');
+    }
+
+    closeModal.onclick = () => modal.classList.remove('active');
+
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+      if (e.target === loginModal) loginModal.classList.remove('active');
+      if (e.target === rulesModal) rulesModal.classList.remove('active');
     });
 
-    const vacationBtn = card.querySelector('.vacation-status');
-    if (currentUser) {
-      vacationBtn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const newStatus = !role.onVacation;
-        try {
-          await updateDoc(doc(db, "roles", docId), { onVacation: newStatus });
-          await loadAndRenderRoles();
-          showNotification(
-            'Статус обновлен', 
-            `${role.nickname} ${newStatus ? 'в отпуске' : 'работает'}`,
-            'success', 
-            3000
-          );
-        } catch (err) {
-          showNotification('Ошибка', 'Не удалось изменить статус отпуска: ' + err.message, 'error', 5000);
-        }
-      });
-    }
+    rulesBtn.onclick = () => rulesModal.classList.add('active');
 
-    if (currentUser) {
-      card.addEventListener('click', (e) => {
-        if (!e.target.closest('.link-btn') && !e.target.closest('.vacation-status') && !e.target.closest('.warnings-badge')) {
-          openEditModal(docId, role);
-        }
-      });
-    }
-
-    return card;
-  }
-
-  function openEditModal(docId, role) {
-    editingDocId = docId;
-    document.getElementById('roleSelect').value = role.role;
-    document.getElementById('nickname').value = role.nickname;
-    document.getElementById('link1').value = role.link1 || '';
-    document.getElementById('link2').value = role.link2 || '';
-    document.getElementById('link3').value = role.link3 || '';
-    document.getElementById('warningsIssued').value = role.warningsIssued || 0;
-    document.getElementById('warningsMax').value = role.warningsMax || 3;
-    document.getElementById('disabled').checked = role.disabled || false;
-    
-    const warningsIssuedInput = document.getElementById('warningsIssued');
-    if (role.disabled) {
-      warningsIssuedInput.disabled = true;
-      warningsIssuedInput.style.opacity = '0.6';
-      warningsIssuedInput.style.cursor = 'not-allowed';
-    } else {
-      warningsIssuedInput.disabled = false;
-      warningsIssuedInput.style.opacity = '1';
-      warningsIssuedInput.style.cursor = 'text';
-    }
-    
-    modalTitle.textContent = 'Редактировать';
-    deleteBtn.style.display = 'block';
-    modal.classList.add('active');
-  }
-
-  closeModal.onclick = () => modal.classList.remove('active');
-  window.onclick = (e) => {
-  if (e.target === modal) modal.classList.remove('active');
-  if (e.target === loginModal) loginModal.classList.remove('active');
-  if (e.target === rulesModal) rulesModal.classList.remove('active');
-};
-
-  authBtn.onclick = () => {
-    if (currentUser) {
-      signOut(auth);
-      showNotification('Выход выполнен', 'Вы вышли из системы', 'info', 4000);
-    } else {
-      loginModal.classList.add('active');
-    }
-  };
-
-  loginForm.onsubmit = async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      loginModal.classList.remove('active');
-      loginForm.reset();
-      showNotification('Вход выполнен', `Добро пожаловать, ${email}`, 'success', 4000);
-    } catch (err) {
-      showNotification('Ошибка авторизации', err.message, 'error', 6000);
-    }
-  };
-
-  addBtn.onclick = () => {
-    editingDocId = null;
-    roleForm.reset();
-    document.getElementById('warningsIssued').value = 0;
-    document.getElementById('warningsMax').value = 3;
-    const warningsIssuedInput = document.getElementById('warningsIssued');
-    warningsIssuedInput.disabled = false;
-    warningsIssuedInput.style.opacity = '1';
-    warningsIssuedInput.style.cursor = 'text';
-    modalTitle.textContent = 'Добавить роль';
-    deleteBtn.style.display = 'none';
-    modal.classList.add('active');
-  };
-
-  roleForm.onsubmit = async (e) => {
-    e.preventDefault();
-
-    const link1 = document.getElementById('link1').value.trim();
-    const link2 = document.getElementById('link2').value.trim();
-    const link3 = document.getElementById('link3').value.trim();
-    const isDisabled = document.getElementById('disabled').checked;
-
-    const data = {
-      role: document.getElementById('roleSelect').value,
-      nickname: document.getElementById('nickname').value.trim(),
-      link1,
-      link2,
-      link3,
-      warningsIssued: isDisabled ? 0 : parseInt(document.getElementById('warningsIssued').value) || 0,
-      warningsMax: parseInt(document.getElementById('warningsMax').value) || 3,
-      disabled: isDisabled,
-      onVacation: editingDocId ? (allRoles.find(r => r.id === editingDocId)?.onVacation ?? false) : false,
-      createdAt: editingDocId ? (allRoles.find(r => r.id === editingDocId)?.createdAt ?? new Date()) : new Date()
+    authBtn.onclick = () => {
+      if (currentUser) {
+        signOut(auth);
+        showNotification('Выход выполнен', 'Вы вышли из системы', 'info', 4000);
+      } else {
+        loginModal.classList.add('active');
+      }
     };
 
-    try {
-      if (editingDocId) {
-        await updateDoc(doc(db, "roles", editingDocId), data);
-        showNotification('Успешно', 'Данные обновлены', 'success', 3000);
-      } else {
-        await addDoc(collection(db, "roles"), data);
-        showNotification('Успешно', 'Новая роль добавлена', 'success', 3000);
+    loginForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        loginModal.classList.remove('active');
+        loginForm.reset();
+        showNotification('Вход выполнен', `Добро пожаловать, ${email}`, 'success', 4000);
+      } catch (err) {
+        showNotification('Ошибка авторизации', err.message, 'error', 6000);
       }
-      modal.classList.remove('active');
+    };
+
+    addBtn.onclick = () => {
+      editingDocId = null;
       roleForm.reset();
-      await loadAndRenderRoles();
-    } catch (err) {
-      showNotification('Ошибка сохранения', err.message, 'error', 6000);
-    }
-  };
+      document.getElementById('warningsIssued').value = 0;
+      document.getElementById('warningsMax').value = 3;
 
-  deleteBtn.onclick = async () => {
-    if (!editingDocId) return;
-    if (!confirm('Вы уверены, что хотите удалить эту роль?')) return;
-
-    try {
-      await deleteDoc(doc(db, "roles", editingDocId));
-      modal.classList.remove('active');
-      showNotification('Успешно', 'Роль удалена', 'success', 3000);
-      await loadAndRenderRoles();
-    } catch (err) {
-      showNotification('Ошибка удаления', err.message, 'error', 6000);
-    }
-  };
-
-  document.getElementById('disabled').addEventListener('change', function() {
-    const warningsIssuedInput = document.getElementById('warningsIssued');
-    
-    if (this.checked) {
-      warningsIssuedInput.value = 0;
-      warningsIssuedInput.disabled = true;
-      warningsIssuedInput.style.opacity = '0.6';
-      warningsIssuedInput.style.cursor = 'not-allowed';
-    } else {
+      const warningsIssuedInput = document.getElementById('warningsIssued');
       warningsIssuedInput.disabled = false;
       warningsIssuedInput.style.opacity = '1';
       warningsIssuedInput.style.cursor = 'text';
-    }
-  });
 
-  searchInput.addEventListener('input', renderRoles);
-  warningsFilter.addEventListener('change', renderRoles);
+      modalTitle.textContent = 'Добавить роль';
+      deleteBtn.style.display = 'none';
+      modal.classList.add('active');
+    };
 
-  onAuthStateChanged(auth, (user) => {
-    currentUser = user;
-    if (user) {
-      addBtn.classList.add('visible');
-      showNotification('Авторизован', `Добро пожаловать, ${user.email}`, 'success', 4000);
-    } else {
-      addBtn.classList.remove('visible');
-    }
-    loadAndRenderRoles();
-  });
-
-  if (!isOnline()) {
-    loadAndRenderRoles();
-  }
-
-  document.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    location.reload();
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'F12') {
+    roleForm.onsubmit = async (e) => {
       e.preventDefault();
-      location.reload();
-    }
 
-    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
-      e.preventDefault();
-      location.reload();
-    }
+      const link1 = document.getElementById('link1').value.trim();
+      const link2 = document.getElementById('link2').value.trim();
+      const link3 = document.getElementById('link3').value.trim();
+      const isDisabled = document.getElementById('disabled').checked;
 
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
-      e.preventDefault();
-      location.reload();
-    }
+      const existing = editingDocId ? allRoles.find(r => r.id === editingDocId) : null;
 
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
-      e.preventDefault();
-      location.reload();
-    }
-  });
+      const data = {
+        role: document.getElementById('roleSelect').value,
+        nickname: document.getElementById('nickname').value.trim(),
+        link1,
+        link2,
+        link3,
+        warningsIssued: isDisabled ? 0 : (parseInt(document.getElementById('warningsIssued').value) || 0),
+        warningsMax: parseInt(document.getElementById('warningsMax').value) || 3,
+        disabled: isDisabled,
+        onVacation: existing?.onVacation ?? false,
+        createdAt: existing?.createdAt ?? new Date()
+      };
 
-  let devtools = false;
-  const threshold = 160;
-
-  setInterval(() => {
-    if (window.outerHeight - window.innerHeight > threshold || 
-        window.outerWidth - window.innerWidth > threshold) {
-      if (!devtools) {
-        devtools = true;
-        window.open(location.href, '_blank');
-        setTimeout(() => location.reload(), 100);
+      try {
+        if (editingDocId) {
+          await updateDoc(doc(db, "roles", editingDocId), data);
+          showNotification('Успешно', 'Данные обновлены', 'success', 3000);
+        } else {
+          await addDoc(collection(db, "roles"), data);
+          showNotification('Успешно', 'Новая роль добавлена', 'success', 3000);
+        }
+        modal.classList.remove('active');
+        roleForm.reset();
+        await loadAndRenderRoles();
+      } catch (err) {
+        showNotification('Ошибка сохранения', err.message, 'error', 6000);
       }
-    } else {
-      devtools = false;
+    };
+
+    deleteBtn.onclick = async () => {
+      if (!editingDocId) return;
+      if (!confirm('Вы уверены, что хотите удалить эту роль?')) return;
+
+      try {
+        await deleteDoc(doc(db, "roles", editingDocId));
+        modal.classList.remove('active');
+        showNotification('Успешно', 'Роль удалена', 'success', 3000);
+        await loadAndRenderRoles();
+      } catch (err) {
+        showNotification('Ошибка удаления', err.message, 'error', 6000);
+      }
+    };
+
+    document.getElementById('disabled').addEventListener('change', function() {
+      const warningsIssuedInput = document.getElementById('warningsIssued');
+
+      if (this.checked) {
+        warningsIssuedInput.value = 0;
+        warningsIssuedInput.disabled = true;
+        warningsIssuedInput.style.opacity = '0.6';
+        warningsIssuedInput.style.cursor = 'not-allowed';
+      } else {
+        warningsIssuedInput.disabled = false;
+        warningsIssuedInput.style.opacity = '1';
+        warningsIssuedInput.style.cursor = 'text';
+      }
+    });
+
+    searchInput.addEventListener('input', renderRoles);
+    warningsFilter.addEventListener('change', renderRoles);
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (user) {
+        addBtn.classList.add('visible');
+        showNotification('Авторизован', `Добро пожаловать, ${user.email}`, 'success', 4000);
+      } else {
+        addBtn.classList.remove('visible');
+      }
+      loadAndRenderRoles();
+    });
+
+    if (!isOnline()) loadAndRenderRoles();
+
+    const snowCanvas = document.getElementById('snow');
+    const ctxSnow = snowCanvas.getContext('2d');
+
+    let W = 0, H = 0, DPR = 1;
+    function resizeSnow(){
+      DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = snowCanvas.width  = Math.floor(window.innerWidth  * DPR);
+      H = snowCanvas.height = Math.floor(window.innerHeight * DPR);
     }
-  }, 1000);
+    resizeSnow();
+    window.addEventListener('resize', resizeSnow);
 
-const rulesBtn = document.createElement('div');
-rulesBtn.className = 'rules-btn';
-rulesBtn.id = 'rulesBtn';
-rulesBtn.innerHTML = '<img src="https://i.yapx.ru/cFMZj.png" alt="Правила" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'📋\'">';
+    let windTarget = 0;
+    let wind = 0;
 
-authBtn.parentNode.insertBefore(rulesBtn, authBtn);
-
-const rulesModal = document.getElementById('rulesModal');
-
-rulesBtn.onclick = () => {
-  rulesModal.classList.add('active');
-};
-
-window.onclick = (e) => {
-  if (e.target === modal) modal.classList.remove('active');
-  if (e.target === loginModal) loginModal.classList.remove('active');
-  if (e.target === rulesModal) rulesModal.classList.remove('active');
-};
-
-const snowCanvas = document.getElementById('snow');
-const ctxSnow = snowCanvas.getContext('2d');
-
-let W = 0, H = 0;
-function resizeSnow(){
-  W = snowCanvas.width = window.innerWidth * devicePixelRatio;
-  H = snowCanvas.height = window.innerHeight * devicePixelRatio;
-}
-resizeSnow();
-window.addEventListener('resize', resizeSnow);
-
-const flakesCount = Math.min(180, Math.floor(window.innerWidth / 6));
-const flakes = Array.from({ length: flakesCount }, () => newFlake(true));
-
-function newFlake(randomY = false){
-  const r = (Math.random() * 2.4 + 0.8) * devicePixelRatio;
-  return {
-    x: Math.random() * W,
-    y: randomY ? Math.random() * H : -10 * devicePixelRatio,
-    r,
-    vy: (Math.random() * 0.8 + 0.7) * devicePixelRatio,
-    vx: (Math.random() * 0.6 - 0.3) * devicePixelRatio,
-    sway: (Math.random() * 0.012 + 0.006),
-    a: Math.random() * Math.PI * 2
-  };
-}
-
-function drawSnow(){
-  ctxSnow.clearRect(0, 0, W, H);
-
-  ctxSnow.shadowColor = 'rgba(255,255,255,0.35)';
-  ctxSnow.shadowBlur = 6 * devicePixelRatio;
-
-  for (let i = 0; i < flakes.length; i++){
-    const f = flakes[i];
-    f.a += f.sway;
-    f.x += (Math.sin(f.a) * 0.6 + f.vx);
-    f.y += f.vy;
-
-    if (f.y - f.r > H || f.x + f.r < 0 || f.x - f.r > W){
-      flakes[i] = newFlake(false);
-      flakes[i].x = Math.random() * W;
-      continue;
+    function setWindFromPointer(clientX){
+      const nx = (clientX / Math.max(1, window.innerWidth) - 0.5) * 2;
+      windTarget = nx * 0.9 * DPR;
     }
 
-    ctxSnow.beginPath();
-    ctxSnow.fillStyle = 'rgba(255,255,255,0.85)';
-    ctxSnow.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-    ctxSnow.fill();
-  }
+    window.addEventListener('mousemove', (e) => setWindFromPointer(e.clientX), { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches[0]) setWindFromPointer(e.touches[0].clientX);
+    }, { passive: true });
 
-  requestAnimationFrame(drawSnow);
-}
-drawSnow();
+    function makeFlakeSprite(type = 0){
+      const size = Math.floor(64 * DPR);
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const g = c.getContext('2d');
 
-</script>
+      g.translate(size/2, size/2);
+
+      g.shadowColor = 'rgba(255,255,255,0.45)';
+      g.shadowBlur  = 8 * DPR;
+
+      const grad = g.createRadialGradient(0,0, 2*DPR, 0,0, 22*DPR);
+      grad.addColorStop(0, 'rgba(255,255,255,0.95)');
+      grad.addColorStop(1, 'rgba(255,255,255,0.00)');
+
+      const arms = type === 2 ? 10 : 8;
+      const mainLen = type === 0 ? 24 : (type === 1 ? 26 : 22);
+      const branchLen = type === 0 ? 10 : (type === 1 ? 12 : 8);
+      const lw = type === 2 ? 1.6 : 2.1;
+
+      g.lineCap = 'round';
+      g.lineJoin = 'round';
+      g.strokeStyle = 'rgba(255,255,255,0.92)';
+      g.lineWidth = lw * DPR;
+
+      for (let i = 0; i < arms; i++){
+        g.save();
+        g.rotate((Math.PI * 2 * i) / arms);
+
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(0, -mainLen * DPR);
+        g.stroke();
+
+        const steps = type === 1 ? [0.35, 0.6, 0.8] : [0.4, 0.7];
+        for (const t of steps){
+          const y = -mainLen * t * DPR;
+          const b = branchLen * (0.85 + Math.random()*0.25) * DPR;
+          const angle = (Math.PI / 6) * (0.85 + Math.random()*0.25);
+
+          g.beginPath();
+          g.moveTo(0, y);
+          g.lineTo(Math.sin(angle) * b, y - Math.cos(angle) * b);
+          g.stroke();
+
+          g.beginPath();
+          g.moveTo(0, y);
+          g.lineTo(-Math.sin(angle) * b, y - Math.cos(angle) * b);
+          g.stroke();
+        }
+
+        g.fillStyle = grad;
+        g.beginPath();
+        g.arc(0, -mainLen * DPR, 5 * DPR, 0, Math.PI * 2);
+        g.fill();
+
+        g.restore();
+      }
+
+      g.fillStyle = 'rgba(255,255,255,0.85)';
+      g.beginPath();
+      g.arc(0, 0, 2.6 * DPR, 0, Math.PI * 2);
+      g.fill();
+
+      return c;
+    }
+
+    let sprites = [makeFlakeSprite(0), makeFlakeSprite(1), makeFlakeSprite(2)];
+
+    function rebuildSprites(){
+      sprites = [makeFlakeSprite(0), makeFlakeSprite(1), makeFlakeSprite(2)];
+    }
+    window.addEventListener('resize', rebuildSprites);
+
+    const flakesCount = Math.min(140, Math.floor(window.innerWidth / 7));
+    const flakes = Array.from({ length: flakesCount }, () => newFlake(true));
+
+    function newFlake(randomY = false){
+      const sprite = sprites[(Math.random()*sprites.length) | 0];
+      const size = (Math.random() * 18 + 10) * DPR;
+
+      const baseVx = (Math.random() * 0.7 - 0.35) * DPR;
+
+      return {
+        x: Math.random() * W,
+        y: randomY ? Math.random() * H : -30 * DPR,
+        size,
+        sprite,
+        vy: (Math.random() * 0.9 + 0.6) * DPR,
+        baseVx,
+        sway: (Math.random() * 0.012 + 0.006),
+        a: Math.random() * Math.PI * 2,
+        rot: Math.random() * Math.PI * 2,
+        spin: (Math.random() * 0.02 - 0.01),
+        alpha: Math.random() * 0.35 + 0.55,
+        tw: Math.random() * 2 + 0.5,
+        ph: Math.random() * Math.PI * 2,
+        drift: (Math.random() * 0.35 + 0.15) * DPR
+      };
+    }
+
+    let lastT = performance.now();
+    function drawSnow(t){
+      const dt = Math.min(32, t - lastT);
+      lastT = t;
+
+      wind += (windTarget - wind) * 0.05;
+
+      const gust = Math.sin(t / 2200) * 0.25 * DPR;
+      const totalWind = wind + gust;
+
+      ctxSnow.clearRect(0, 0, W, H);
+
+      ctxSnow.shadowColor = 'rgba(255,255,255,0.25)';
+      ctxSnow.shadowBlur = 6 * DPR;
+
+      const k = dt / 16;
+
+      for (let i = 0; i < flakes.length; i++){
+        const f = flakes[i];
+
+        f.a += f.sway;
+        f.rot += f.spin * k;
+
+        const windEffect = totalWind * (0.35 + (f.size / (28 * DPR)) * 0.65) * f.drift;
+
+        f.x += (Math.sin(f.a) * 0.7 + f.baseVx + windEffect) * k;
+        f.y += f.vy * k;
+
+        if (f.y - f.size > H || f.x + f.size < -80*DPR || f.x - f.size > W + 80*DPR){
+          flakes[i] = newFlake(false);
+          flakes[i].x = Math.random() * W;
+          continue;
+        }
+
+        const twinkle = 0.75 + 0.25 * Math.sin((t/1000) * f.tw + f.ph);
+        const a = f.alpha * twinkle;
+
+        ctxSnow.save();
+        ctxSnow.globalAlpha = a;
+        ctxSnow.translate(f.x, f.y);
+        ctxSnow.rotate(f.rot);
+        ctxSnow.drawImage(f.sprite, -f.size/2, -f.size/2, f.size, f.size);
+        ctxSnow.restore();
+      }
+
+      requestAnimationFrame(drawSnow);
+    }
+    requestAnimationFrame(drawSnow);
+  </script>
 
 </body>
 </html>
-
