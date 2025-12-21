@@ -5,12 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Состав Админов</title>
   <style>
-/* =========================
-   BLUE GLASS THEME (v2)
-   заменяет весь <style>
-   ========================= */
-
-/* ---------- Theme ---------- */
 :root{
   --bg0:#060b1a;
   --bg1:#071632;
@@ -35,7 +29,6 @@
   --radius: 16px;
 }
 
-/* ---------- Base ---------- */
 *{ margin:0; padding:0; box-sizing:border-box; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
 
 body{
@@ -49,12 +42,10 @@ body{
     linear-gradient(180deg, var(--bg0), var(--bg1) 40%, var(--bg2));
 }
 
-/* nice scrollbars */
 *::-webkit-scrollbar{ width:10px; height:10px; }
 *::-webkit-scrollbar-thumb{ background: rgba(58,169,255,.25); border-radius: 20px; border:2px solid rgba(0,0,0,.15); }
 *::-webkit-scrollbar-track{ background: rgba(0,0,0,.18); border-radius: 20px; }
 
-/* ---------- Header ---------- */
 .header{
   display:flex;
   justify-content:flex-end;
@@ -96,7 +87,6 @@ body{
   object-fit:cover;
 }
 
-/* ---------- Search / Filter ---------- */
 .search-box{ text-align:center; margin:14px 0 10px; }
 .filter-box{
   display:flex;
@@ -149,7 +139,6 @@ input:focus, select:focus{
   accent-color: var(--accent);
 }
 
-/* ---------- Offline banner ---------- */
 .offline-banner{
   background: rgba(255,61,141,.16);
   border: 1px solid rgba(255,61,141,.35);
@@ -163,7 +152,6 @@ input:focus, select:focus{
   max-width: 800px;
 }
 
-/* ---------- Layout ---------- */
 .hierarchy{
   display:flex;
   flex-direction:column;
@@ -190,7 +178,6 @@ input:focus, select:focus{
   box-shadow: 0 14px 34px rgba(0,0,0,.32);
 }
 
-/* ---------- Role cards ---------- */
 .role-card{
   position: relative;
   border-radius: var(--radius);
@@ -207,7 +194,6 @@ input:focus, select:focus{
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
 }
 
-/* subtle top glow */
 .role-card::before{
   content:"";
   position:absolute;
@@ -239,7 +225,6 @@ input:focus, select:focus{
   box-shadow: 0 18px 55px rgba(0,0,0,.55);
 }
 
-/* Text */
 .role-title{
   font-size: 14px;
   font-weight: 800;
@@ -256,7 +241,6 @@ input:focus, select:focus{
   text-shadow: 0 6px 22px rgba(0,0,0,.35);
 }
 
-/* Links buttons */
 .links{
   display:flex;
   gap:8px;
@@ -287,13 +271,11 @@ input:focus, select:focus{
 }
 .link-btn:active{ transform: translateY(-1px) scale(.99); }
 
-/* Vacation pill */
 .vacation-status{
   box-shadow: 0 12px 28px rgba(0,0,0,.35);
   border: 1px solid rgba(255,255,255,.18);
 }
 
-/* Warnings badge */
 .warnings-badge{
   position:absolute;
   top: 12px;
@@ -314,7 +296,6 @@ input:focus, select:focus{
   background: linear-gradient(90deg, rgba(40,224,143,.95), rgba(58,169,255,.65));
 }
 
-/* Edit overlay */
 .edit-overlay{
   position:absolute;
   inset:0;
@@ -339,7 +320,6 @@ input:focus, select:focus{
   box-shadow: 0 16px 38px rgba(0,0,0,.35);
 }
 
-/* ---------- Add button ---------- */
 .add-btn{
   position: fixed;
   bottom: 22px;
@@ -350,14 +330,12 @@ input:focus, select:focus{
   border: none;
   cursor:pointer;
 
-  /* keep your image */
   background: transparent;
   background-image: url('https://i.postimg.cc/L4VzQSHW/3d-plus-dynamic-gradient-icon-1082964-122.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 
-  /* nicer depth */
   filter: drop-shadow(0 16px 24px rgba(0,0,0,.45));
   transition: transform .18s ease, filter .18s ease;
 
@@ -377,7 +355,6 @@ input:focus, select:focus{
 }
 .add-btn:active{ transform: scale(1.02) translateY(-1px); }
 
-/* ---------- Modals ---------- */
 .modal, .rules-modal{
   position: fixed;
   inset: 0;
@@ -409,7 +386,6 @@ input:focus, select:focus{
   overflow-y: auto;
 }
 
-/* modal title */
 .modal h2{
   margin-bottom: 16px;
   text-align:center;
@@ -421,7 +397,6 @@ input:focus, select:focus{
   color: transparent;
 }
 
-/* rules modal */
 .rules-title{
   font-size: 20px;
   font-weight: 900;
@@ -439,11 +414,9 @@ input:focus, select:focus{
 }
 .rules-text p{ margin: 8px 0; }
 
-/* form spacing */
 .form-group{ margin-bottom: 12px; }
 label{ display:block; margin-bottom: 6px; font-size: 14px; color: var(--muted); font-weight: 700; }
 
-/* warnings group */
 .warnings-group{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -452,7 +425,6 @@ label{ display:block; margin-bottom: 6px; font-size: 14px; color: var(--muted); 
 }
 .warnings-group .form-group{ margin-bottom: 0; }
 
-/* toggle */
 .toggle-group{
   display:flex;
   align-items:center;
@@ -466,7 +438,6 @@ label{ display:block; margin-bottom: 6px; font-size: 14px; color: var(--muted); 
 }
 .toggle-label{ margin:0; font-weight: 900; color: var(--text); }
 
-/* switch */
 .toggle-switch{ position: relative; display:inline-block; width:52px; height:26px; }
 .toggle-switch input{ opacity:0; width:0; height:0; }
 .toggle-slider{
@@ -496,7 +467,6 @@ input:checked + .toggle-slider:before{
   transform: translate(26px, -50%);
 }
 
-/* buttons */
 button{
   width: 100%;
   padding: 12px 14px;
@@ -524,7 +494,6 @@ button:active{ transform: translateY(-1px) scale(.99); }
   display:none;
 }
 
-/* close modal button (your existing, but prettier if you show it) */
 .close-modal{
   position:absolute;
   top: 10px;
@@ -536,13 +505,12 @@ button:active{ transform: translateY(-1px) scale(.99); }
   border: 1px solid rgba(58,169,255,.18);
   color: var(--text);
   font-size: 22px;
-  display:none; /* you hide it in your logic */
+  display:none;
   align-items:center;
   justify-content:center;
   cursor:pointer;
 }
 
-/* ---------- Notifications ---------- */
 .notification-container{
   position: fixed;
   top: 18px;
@@ -613,7 +581,6 @@ button:active{ transform: translateY(-1px) scale(.99); }
   background: rgba(255,255,255,.08);
 }
 
-/* ---------- Spinner ---------- */
 .spinner{
   display:inline-block;
   width: 26px;
@@ -629,7 +596,6 @@ button:active{ transform: translateY(-1px) scale(.99); }
   to{ opacity:1; transform: translateY(0); }
 }
 
-/* ---------- Responsive ---------- */
 @media (max-width: 600px){
   body{ padding:12px; }
   .add-btn{ bottom: 16px; right: 16px; width: 54px; height: 54px; }
@@ -1313,7 +1279,6 @@ window.onclick = (e) => {
   if (e.target === rulesModal) rulesModal.classList.remove('active');
 };
 
-// ===== Snow (canvas) =====
 const snowCanvas = document.getElementById('snow');
 const ctxSnow = snowCanvas.getContext('2d');
 
@@ -1344,7 +1309,6 @@ function newFlake(randomY = false){
 function drawSnow(){
   ctxSnow.clearRect(0, 0, W, H);
 
-  // мягкое свечение
   ctxSnow.shadowColor = 'rgba(255,255,255,0.35)';
   ctxSnow.shadowBlur = 6 * devicePixelRatio;
 
@@ -1354,7 +1318,6 @@ function drawSnow(){
     f.x += (Math.sin(f.a) * 0.6 + f.vx);
     f.y += f.vy;
 
-    // перезапуск снежинки
     if (f.y - f.r > H || f.x + f.r < 0 || f.x - f.r > W){
       flakes[i] = newFlake(false);
       flakes[i].x = Math.random() * W;
@@ -1375,3 +1338,4 @@ drawSnow();
 
 </body>
 </html>
+
