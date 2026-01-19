@@ -595,7 +595,7 @@
 
         <div class="form-group">
           <label>Никнейм</label>
-          <input type="text" id="nickname" required placeholder="Например: SuperAdmin">
+          <input type="text" id="nickname" required placeholder="Например: Не придумал">
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
@@ -975,7 +975,7 @@
         warningsIssued: parseInt(document.getElementById('warningsIssued').value) || 0,
         warningsMax: parseInt(document.getElementById('warningsMax').value) || 3,
         disabled: document.getElementById('disabled').checked,
-        onVacation: false, // по дефолту
+        onVacation: false,
         createdAt: new Date().toISOString()
       };
 
@@ -1028,3 +1028,4 @@
 
 </body>
 </html>
+
