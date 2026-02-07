@@ -41,6 +41,8 @@
       color: var(--text-main);
       padding: 20px;
       overflow-x: hidden;
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
     }
 
     ::-webkit-scrollbar { width: 8px; }
@@ -83,6 +85,12 @@
       transition: all 0.2s ease;
       overflow: hidden;
     }
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
     .btn-circle:hover {
       background: var(--card-hover);
@@ -274,11 +282,12 @@
       gap: 8px;
       flex-wrap: wrap;
       margin-top: auto;
-      /* Добавили z-index чтобы ссылки были кликабельны поверх оверлея редактирования */
       position: relative;
       padding-top: 20px;
       z-index: 20;
     }
+
+
 
     .action-btn {
       padding: 6px 12px;
@@ -497,6 +506,38 @@
       gap: 12px;
       animation: slideInRight 0.3s ease;
     }
+.pie-chart {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  
+  background: conic-gradient(var(--c) calc(var(--p) * 1%), rgba(255, 255, 255, 0.1) 0);
+  
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  transition: 0.3s;
+}
+
+.pie-chart::after {
+  content: '';
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  background: #151e32;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.chart-content {
+  position: relative;
+  z-index: 2; 
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main);
+}
     .notification.success { border-color: var(--success); }
     .notification.error { border-color: var(--danger); }
     
@@ -527,6 +568,7 @@
       <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       <input type="text" id="searchInput" placeholder="Поиск администратора...">
     </div>
+
     <label class="checkbox-wrapper">
       <input type="checkbox" id="warningsFilter">
       <span>Показать только с выговорами</span>
@@ -787,24 +829,33 @@
       const vacation = filtered.filter(r => r.onVacation).length;
       const warned = filtered.filter(r => (r.warningsIssued || 0) > 0 && !r.disabled).length;
 
+      const percentVacation = total > 0 ? Math.round((vacation / total) * 100) : 0;
+      const percentWarned = total > 0 ? Math.round((warned / total) * 100) : 0;
+
       statsContainer.innerHTML = `
         <div class="stat-card">
+          <div class="pie-chart" style="--p:100; --c:var(--accent)">
+            <span class="chart-content">${total}</span>
+          </div>
           <div class="stat-label">Всего</div>
-          <div class="stat-value">${total}</div>
         </div>
         <div class="stat-card">
+          <div class="pie-chart" style="--p:${percentVacation}; --c:var(--warning)">
+             <span class="chart-content">${vacation}</span>
+          </div>
           <div class="stat-label">В отпуске</div>
-          <div class="stat-value" style="color:var(--warning)">${vacation}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">С варнами</div>
-          <div class="stat-value" style="color:var(--danger)">${warned}</div>
+          <div class="pie-chart" style="--p:${percentWarned}; --c:var(--danger)">
+             <span class="chart-content">${warned}</span>
+          </div>
+          <div class="stat-label">Нарушители</div>
         </div>
       `;
 
       hierarchyContainer.innerHTML = '';
       if(filtered.length === 0) {
-        hierarchyContainer.innerHTML = '<div style="text-align:center; color:var(--text-muted)">Пусто...</div>';
+        hierarchyContainer.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 20px;">Никого не найдено...</div>';
         return;
       }
 
@@ -823,7 +874,11 @@
 
         const color = ROLE_COLORS[roleName] || '#94a3b8';
 
-        section.innerHTML = `<div class="section-header" style="color:${color}; border-color:${color}; background: linear-gradient(90deg, ${color}15, transparent)">${roleName}</div>`;
+        section.innerHTML = `
+            <div class="section-header" style="color:${color}; border-color:${color}; background: linear-gradient(90deg, ${color}15, transparent)">
+                ${roleName}
+            </div>
+        `;
         
         const cardsDiv = document.createElement('div');
         cardsDiv.className = 'cards-container';
@@ -835,8 +890,11 @@
         section.appendChild(cardsDiv);
         hierarchyContainer.appendChild(section);
       });
-    }
 
+      if (typeof initTilt === "function") {
+         initTilt();
+      }
+    }
     function createCard(role, color) {
       const div = document.createElement('div');
       const warns = role.warningsIssued || 0;
@@ -1010,6 +1068,8 @@
       currentUser = user;
       const avatarImg = document.getElementById('userAvatarImg');
       const avatarIcon = document.getElementById('userAvatarIcon');
+
+
       
       if(user) {
         addBtn.classList.add('visible');
@@ -1028,4 +1088,3 @@
 
 </body>
 </html>
-
