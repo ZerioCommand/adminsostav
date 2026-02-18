@@ -21,7 +21,7 @@
       --text-main: #ffffff;
       --text-muted: #94a3b8;
       
-      --accent: #3b82f6; /* Синий */
+      --accent: #3b82f6;
       --accent-glow: rgba(59, 130, 246, 0.5);
       
       --danger: #ef4444;
@@ -810,9 +810,9 @@
       if (!currentUser) return;
       try {
         await addDoc(collection(db, "logs"), {
-          admin: currentUser.email, // Кто сделал
-          action: action,           // Что сделал (например: "Снял варн")
-          details: details,         // С кем сделал (например: "NickName")
+          admin: currentUser.email,
+          action: action,
+          details: details,
           timestamp: new Date().toISOString()
         });
       } catch (e) {
@@ -1005,7 +1005,6 @@
           try {
             await updateDoc(doc(db, "roles", role.id), { onVacation: !role.onVacation });
             
-            // ЛОГИРОВАНИЕ ОТПУСКА
             addLog(role.onVacation ? "Вернул из отпуска" : "Отправил в отпуск", role.nickname);
 
             showNotification('Успешно', 'Статус изменен', 'success');
@@ -1099,12 +1098,10 @@
       try {
         if(editingDocId) {
            await updateDoc(doc(db, "roles", editingDocId), data);
-           // ЛОГИРОВАНИЕ ИЗМЕНЕНИЯ
            addLog("Редактировал", data.nickname);
            showNotification('Обновлено', 'Данные сотрудника сохранены', 'success');
         } else {
            await addDoc(collection(db, "roles"), data);
-           // ЛОГИРОВАНИЕ СОЗДАНИЯ
            addLog("Создал", data.nickname);
            showNotification('Создано', 'Новый сотрудник добавлен', 'success');
         }
@@ -1116,12 +1113,10 @@
     document.getElementById('deleteBtn').onclick = async () => {
       if(confirm('Удалить этого сотрудника навсегда?')) {
         try {
-          // Получаем ник перед удалением
           const nick = document.getElementById('nickname').value;
           
           await deleteDoc(doc(db, "roles", editingDocId));
           
-          // ЛОГИРОВАНИЕ УДАЛЕНИЯ
           addLog("Удалил", nick);
 
           modal.classList.remove('active');
@@ -1131,7 +1126,6 @@
       }
     };
 
-    // --- ЛОГИКА ПРОСМОТРА ИСТОРИИ ---
     const logsBtn = document.getElementById('logsBtn');
     const logsModal = document.getElementById('logsModal');
     const logsList = document.getElementById('logsList');
@@ -1141,7 +1135,6 @@
       logsList.innerHTML = '<div style="text-align:center; color:var(--text-muted)">Загрузка...</div>';
       
       try {
-        // Берем логи (сортировка по времени может потребовать индекса в консоли)
         const q = query(collection(db, "logs"), orderBy("timestamp", "desc")); 
         
         const snapshot = await getDocs(q);
@@ -1159,7 +1152,6 @@
           const item = document.createElement('div');
           item.style.cssText = 'background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; font-size:13px; border-left: 2px solid var(--text-muted);';
           
-          // Цвет полоски
           let color = '#94a3b8';
           if(log.action.includes('Удалил')) color = '#ef4444';
           if(log.action.includes('Создал')) color = '#10b981';
@@ -1196,12 +1188,12 @@
 
       if(user) {
         addBtn.classList.add('visible');
-        logsBtn.style.display = 'flex'; // Показываем кнопку истории
+        logsBtn.style.display = 'flex';
         avatarImg.style.display = 'block';
         avatarIcon.style.display = 'none';
       } else {
         addBtn.classList.remove('visible');
-        logsBtn.style.display = 'none'; // Скрываем
+        logsBtn.style.display = 'none';
         avatarImg.style.display = 'none';
         avatarIcon.style.display = 'block';
       }
@@ -1214,3 +1206,4 @@
 
 </body>
 </html>
+
