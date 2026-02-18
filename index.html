@@ -240,6 +240,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transform-style: preserve-3d;
     }
 
     .role-card:hover {
@@ -267,6 +268,7 @@
       letter-spacing: 0.5px;
       color: var(--role-color, var(--text-muted));
       margin-bottom: 6px;
+      transform: translateZ(20px);
     }
 
     .nickname {
@@ -275,6 +277,7 @@
       color: var(--text-main);
       margin-bottom: 0px;
       text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      transform: translateZ(30px);
     }
 
     .card-actions {
@@ -285,9 +288,8 @@
       position: relative;
       padding-top: 20px;
       z-index: 20;
+      transform: translateZ(25px);
     }
-
-
 
     .action-btn {
       padding: 6px 12px;
@@ -323,13 +325,13 @@
       font-weight: 700;
       background: rgba(0,0,0,0.3);
       border: 1px solid var(--card-border);
-      
       z-index: 20; 
       transition: all 0.2s ease;
+      transform: translateZ(20px);
     }
     
     .status-badge.clickable:hover {
-      transform: scale(1.05);
+      transform: scale(1.05) translateZ(20px);
       filter: brightness(1.2);
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
@@ -350,6 +352,7 @@
       color: var(--danger);
       font-size: 12px;
       font-weight: 700;
+      transform: translateZ(20px);
     }
     .warnings-badge.clean {
       background: rgba(16, 185, 129, 0.1);
@@ -369,6 +372,7 @@
       transition: 0.2s;
       cursor: pointer;
       z-index: 10;
+      transform: translateZ(50px);
     }
     .role-card.editable:hover .edit-hint { opacity: 1; }
     .edit-btn {
@@ -552,13 +556,15 @@
     <div class="notification-container" id="notificationContainer"></div>
     
     <div class="btn-circle" id="rulesBtn" title="Правила">
-      <!-- SVG List Icon -->
       <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
     </div>
 
+    <div class="btn-circle" id="logsBtn" title="История действий" style="display:none">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path></svg>
+    </div>
+
     <div class="btn-circle" id="authBtn" title="Авторизация">
-      <!-- Аватарка или SVG -->
-      <img src="https://i.postimg.cc/bw6qvcFL/Bez_imeni-2.png" alt="User" style="display:none">
+      <img src="https://i.postimg.cc/bw6qvcFL/Bez_imeni-2.png" id="userAvatarImg" alt="User" style="display:none">
       <svg class="icon" id="userAvatarIcon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
     </div>
   </div>
@@ -613,6 +619,21 @@
     </div>
   </div>
 
+  <div class="modal" id="logsModal">
+    <div class="modal-content">
+      <button class="close-modal">
+        <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <div class="modal-title">
+        <svg class="icon" style="color:var(--accent)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        История изменений
+      </div>
+      <div id="logsList" style="display:flex; flex-direction:column; gap:10px; max-height:400px; overflow-y:auto; padding-right:5px;">
+        <div style="text-align:center; color:var(--text-muted)">Загрузка...</div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal" id="modal">
     <div class="modal-content">
       <button class="close-modal" id="closeEditor">
@@ -626,7 +647,7 @@
             <option value="Владелец">Владелец</option>
             <option value="Совладелец">Совладелец</option>
             <option value="Руководство">Руководство</option>
-            <option value="Куратор">Руководство</option>
+            <option value="Куратор">Куратор</option>
             <option value="Гл. Админ">Гл. Админ</option>
             <option value="Зам.Га">Зам.Га</option>
             <option value="Покупной Админ">Покупной Админ</option>
@@ -720,6 +741,8 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
@@ -741,8 +764,8 @@
     const ROLE_PRIORITY = {
       "Владелец": 1,
       "Совладелец": 2,
-      "Куратор": 3,
-      "Руководство": 4,
+      "Руководство": 3,
+      "Куратор": 4,
       "Гл. Админ": 5,
       "Зам.Га": 6,
       "Покупной Админ": 7,
@@ -781,6 +804,21 @@
     let editingDocId = null;
     let allRoles = [];
     const CACHE_KEY = 'roles_cache_v2';
+
+    // Функция записи лога в базу
+    async function addLog(action, details) {
+      if (!currentUser) return;
+      try {
+        await addDoc(collection(db, "logs"), {
+          admin: currentUser.email, // Кто сделал
+          action: action,           // Что сделал (например: "Снял варн")
+          details: details,         // С кем сделал (например: "NickName")
+          timestamp: new Date().toISOString()
+        });
+      } catch (e) {
+        console.error("Ошибка логгирования:", e);
+      }
+    }
 
     function showNotification(title, message, type = 'info') {
       const container = document.getElementById('notificationContainer');
@@ -901,10 +939,17 @@
         hierarchyContainer.appendChild(section);
       });
 
-      if (typeof initTilt === "function") {
-         initTilt();
+      if (typeof VanillaTilt !== "undefined") {
+        VanillaTilt.init(document.querySelectorAll(".role-card"), {
+          max: 15,
+          speed: 400,
+          glare: true,
+          "max-glare": 0.2,
+          scale: 1.05
+        });
       }
-    }
+    } 
+
     function createCard(role, color) {
       const div = document.createElement('div');
       const warns = role.warningsIssued || 0;
@@ -959,6 +1004,10 @@
           e.stopPropagation();
           try {
             await updateDoc(doc(db, "roles", role.id), { onVacation: !role.onVacation });
+            
+            // ЛОГИРОВАНИЕ ОТПУСКА
+            addLog(role.onVacation ? "Вернул из отпуска" : "Отправил в отпуск", role.nickname);
+
             showNotification('Успешно', 'Статус изменен', 'success');
             loadRoles();
           } catch(err) { showNotification('Ошибка', err.message, 'error'); }
@@ -1050,9 +1099,13 @@
       try {
         if(editingDocId) {
            await updateDoc(doc(db, "roles", editingDocId), data);
+           // ЛОГИРОВАНИЕ ИЗМЕНЕНИЯ
+           addLog("Редактировал", data.nickname);
            showNotification('Обновлено', 'Данные сотрудника сохранены', 'success');
         } else {
            await addDoc(collection(db, "roles"), data);
+           // ЛОГИРОВАНИЕ СОЗДАНИЯ
+           addLog("Создал", data.nickname);
            showNotification('Создано', 'Новый сотрудник добавлен', 'success');
         }
         modal.classList.remove('active');
@@ -1063,11 +1116,73 @@
     document.getElementById('deleteBtn').onclick = async () => {
       if(confirm('Удалить этого сотрудника навсегда?')) {
         try {
+          // Получаем ник перед удалением
+          const nick = document.getElementById('nickname').value;
+          
           await deleteDoc(doc(db, "roles", editingDocId));
+          
+          // ЛОГИРОВАНИЕ УДАЛЕНИЯ
+          addLog("Удалил", nick);
+
           modal.classList.remove('active');
           showNotification('Удалено', 'Сотрудник удален', 'success');
           loadRoles();
         } catch(err) { showNotification('Ошибка', err.message, 'error'); }
+      }
+    };
+
+    // --- ЛОГИКА ПРОСМОТРА ИСТОРИИ ---
+    const logsBtn = document.getElementById('logsBtn');
+    const logsModal = document.getElementById('logsModal');
+    const logsList = document.getElementById('logsList');
+
+    logsBtn.onclick = async () => {
+      logsModal.classList.add('active');
+      logsList.innerHTML = '<div style="text-align:center; color:var(--text-muted)">Загрузка...</div>';
+      
+      try {
+        // Берем логи (сортировка по времени может потребовать индекса в консоли)
+        const q = query(collection(db, "logs"), orderBy("timestamp", "desc")); 
+        
+        const snapshot = await getDocs(q);
+        logsList.innerHTML = '';
+
+        if (snapshot.empty) {
+            logsList.innerHTML = '<div style="text-align:center; color:var(--text-muted)">История пуста</div>';
+            return;
+        }
+
+        snapshot.forEach(doc => {
+          const log = doc.data();
+          const date = new Date(log.timestamp).toLocaleString('ru-RU');
+          
+          const item = document.createElement('div');
+          item.style.cssText = 'background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; font-size:13px; border-left: 2px solid var(--text-muted);';
+          
+          // Цвет полоски
+          let color = '#94a3b8';
+          if(log.action.includes('Удалил')) color = '#ef4444';
+          if(log.action.includes('Создал')) color = '#10b981';
+          if(log.action.includes('Редактировал')) color = '#3b82f6';
+          if(log.action.includes('отпуск')) color = '#f59e0b';
+          
+          item.style.borderColor = color;
+          
+          item.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <strong style="color:var(--text-main)">${log.action}: ${log.details}</strong>
+                <span style="font-size:11px; color:var(--text-muted)">${date}</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted);">
+                Админ: ${log.admin}
+            </div>
+          `;
+          logsList.appendChild(item);
+        });
+        
+      } catch (e) {
+        console.error(e);
+        logsList.innerHTML = '<div style="color:var(--danger)">Нужен индекс в Firebase (см. консоль) или ошибка сети</div>';
       }
     };
 
@@ -1079,14 +1194,14 @@
       const avatarImg = document.getElementById('userAvatarImg');
       const avatarIcon = document.getElementById('userAvatarIcon');
 
-
-      
       if(user) {
         addBtn.classList.add('visible');
+        logsBtn.style.display = 'flex'; // Показываем кнопку истории
         avatarImg.style.display = 'block';
         avatarIcon.style.display = 'none';
       } else {
         addBtn.classList.remove('visible');
+        logsBtn.style.display = 'none'; // Скрываем
         avatarImg.style.display = 'none';
         avatarIcon.style.display = 'block';
       }
@@ -1094,6 +1209,7 @@
     });
 
     loadRoles();
+  
   </script>
 
 </body>
